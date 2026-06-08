@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SnapAndWrap Magic Frame</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#000;color:#fff;font-family:'DM Sans',sans-serif;
+    height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+  #splash{
+    position:fixed;inset:0;background:#0a0a0f;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:1000;transition:opacity .5s
+  }
+  .brand{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
+    background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+  .tagline{font-size:0.85rem;color:#6b6b82;margin-bottom:2.5rem;letter-spacing:.05em}
+  .loader{width:40px;height:40px;border:3px solid #2a2a38;
+    border-top-color:#7c5cfc;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:1.2rem}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .load-text{font-size:0.85rem;color:#6b6b82}
+
+  #error-screen{
+    position:fixed;inset:0;background:#0a0a0f;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    z-index:999;padding:2rem;text-align:center
+  }
+  .err-icon{font-size:3rem;margin-bottom:1rem}
+  .err-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:8px}
+  .err-msg{font-size:0.9rem;color:#6b6b82;line-height:1.6}
+
+  #ar-container{
+    position:fixed;inset:0;display:none;
+  }
+  #ar-container video{width:100%;height:100%;object-fit:cover}
+
+  #scan-hint{
+    position:fixed;bottom:0;left:0;right:0;
+    padding:1.5rem;text-align:center;
+    background:linear-gradient(transparent,rgba(0,0,0,.8));
+    z-index:50;transition:opacity .5s
+  }
+  .hint-text{font-size:0.9rem;color:rgba(255,255,255,.7);margin-bottom:4px}
+  .hint-sub{font-size:0.75rem;color:rgba(255,255,255,.4)}
+  .pulse-ring{
+    width:60px;height:60px;border:2px solid rgba(124,92,252,.6);
+    border-radius:50%;margin:0 auto 12px;
+    animation:pulse 1.5s ease-out infinite
+  }
+  @keyframes pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.5);opacity:0}}
+
+  #video-overlay{
+    position:fixed;inset:0;z-index:60;
+    display:none;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.15)
+  }
+  #overlay-video{
+    width:90vw;max-width:500px;border-radius:16px;
+    box-shadow:0 0 60px rgba(124,92,252,.4)
+  }
+  .video-close{
+    position:fixed;top:1rem;right:1rem;
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);
+    color:#fff;font-size:1.2rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;z-index:61
+  }
+
+  #found-banner{
+    position:fixed;top:1rem;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+    padding:8px 20px;border-radius:30px;font-size:0.85rem;font-weight:500;
+    z-index:55;display:none;white-space:nowrap;
+    box-shadow:0 4px 20px rgba(124,92,252,.4)
+  }
+
+  .corner-brand{
+    position:fixed;top:1rem;left:1rem;z-index:55;
+    font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
+    background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    display:none
+  }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="brand">SnapAndWrap</div>
+  <div class="tagline">Magic Video Frame</div>
+  <div class="loader"></div>
+  <div class="load-text" id="load-text">Loading your magic frame...</div>
+</div>
+
+<!-- ERROR -->
+<div id="error-screen">
+  <div class="err-icon">😕</div>
+  <div class="err-title" id="err-title">Something went wrong</div>
+  <div class="err-msg" id="err-msg">Please check your link and try again.</div>
+</div>
+
+<!-- AR CAMERA VIEW -->
+<div id="ar-container">
+  <video id="camera-feed" autoplay playsinline muted></video>
+</div>
+
+<!-- CORNER BRAND -->
+<div class="corner-brand" id="corner-brand">SnapAndWrap</div>
+
+<!-- SCAN HINT -->
+<div id="scan-hint">
+  <div class="pulse-ring"></div>
+  <div class="hint-text">Point your camera at the photo frame</div>
+  <div class="hint-sub">Keep frame fully visible • Hold steady</div>
+</div>
+
+<!-- FOUND BANNER -->
+<div id="found-banner">✨ Frame detected! Playing your video...</div>
+
+<!-- VIDEO OVERLAY -->
+<div id="video-overlay">
+  <video id="overlay-video" autoplay playsinline loop controls></video>
+  <div class="video-close" onclick="closeVideo()">✕</div>
+</div>
+
+<script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get('order');
+
+let orderData = null;
+let cameraStream = null;
+let scanInterval = null;
+let videoPlaying = false;
+let scanCanvas = document.createElement('canvas');
+let scanCtx = scanCanvas.getContext('2d');
+let targetImage = new Image();
+let targetLoaded = false;
+
+function showError(title, msg){
+  document.getElementById('splash').style.display = 'none';
+  document.getElementById('error-screen').style.display = 'flex';
+  document.getElementById('err-title').textContent = title;
+  document.getElementById('err-msg').textContent = msg;
+}
+
+function setLoadText(t){ document.getElementById('load-text').textContent = t; }
+
+async function init(){
+  if(!orderId){
+    showError('Invalid Link', 'No order ID found in this link. Please check the QR code you received.');
+    return;
+  }
+
+  setLoadText('Finding your order...');
+  try {
+    const snap = await db.ref('orders/' + orderId).get();
+    if(!snap.exists()){
+      showError('Order Not Found', 'Order "' + orderId + '" does not exist. Please contact SnapAndWrap.');
+      return;
+    }
+    orderData = snap.val();
+    db.ref('orders/' + orderId + '/scanCount').transaction(c => (c||0) + 1);
+
+    setLoadText('Loading frame data...');
+    targetImage.crossOrigin = 'anonymous';
+    targetImage.onload = () => { targetLoaded = true; };
+    targetImage.onerror = () => { targetLoaded = false; };
+    targetImage.src = orderData.frameURL;
+
+    setLoadText('Starting camera...');
+    await startCamera();
+
+  } catch(e){
+    showError('Connection Error', 'Could not load order. Please check your internet and try again.');
+    console.error(e);
+  }
+}
+
+async function startCamera(){
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} },
+      audio:false
+    });
+    const camVideo = document.getElementById('camera-feed');
+    camVideo.srcObject = cameraStream;
+    await camVideo.play();
+
+    document.getElementById('splash').style.opacity = '0';
+    setTimeout(()=>{
+      document.getElementById('splash').style.display = 'none';
+      document.getElementById('ar-container').style.display = 'block';
+      document.getElementById('scan-hint').style.display = 'block';
+      document.getElementById('corner-brand').style.display = 'block';
+    }, 500);
+
+    startScanning();
+
+  } catch(e){
+    if(e.name === 'NotAllowedError'){
+      showError('Camera Permission Denied', 'Please allow camera access when prompted, then refresh this page.');
+    } else {
+      showError('Camera Error', 'Could not access camera. Please use Chrome or Safari and try again.');
+    }
+  }
+}
+
+function startScanning(){
+  const camVideo = document.getElementById('camera-feed');
+  scanInterval = setInterval(() => {
+    if(videoPlaying || !targetLoaded) return;
+    if(camVideo.readyState < 2) return;
+
+    const w = camVideo.videoWidth, h = camVideo.videoHeight;
+    if(!w || !h) return;
+
+    scanCanvas.width = w; scanCanvas.height = h;
+    scanCtx.drawImage(camVideo, 0, 0, w, h);
+
+    const frameData = scanCtx.getImageData(0, 0, w, h);
+    const detected = checkFrameSimilarity(frameData, w, h);
+
+    if(detected){
+      triggerVideo();
+    }
+  }, 800);
+}
+
+function checkFrameSimilarity(frameData, w, h){
+  try {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 64; tempCanvas.height = 64;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    tempCtx.drawImage(scanCanvas, 0, 0, 64, 64);
+    const camSmall = tempCtx.getImageData(0, 0, 64, 64);
+
+    const imgCanvas = document.createElement('canvas');
+    imgCanvas.width = 64; imgCanvas.height = 64;
+    const imgCtx = imgCanvas.getContext('2d');
+    imgCtx.drawImage(targetImage, 0, 0, 64, 64);
+    const imgSmall = imgCtx.getImageData(0, 0, 64, 64);
+
+    let diff = 0;
+    const total = camSmall.data.length / 4;
+    for(let i = 0; i < camSmall.data.length; i += 4){
+      diff += Math.abs(camSmall.data[i] - imgSmall.data[i]);
+      diff += Math.abs(camSmall.data[i+1] - imgSmall.data[i+1]);
+      diff += Math.abs(camSmall.data[i+2] - imgSmall.data[i+2]);
+    }
+    const avgDiff = diff / (total * 3);
+    return avgDiff < 35;
+  } catch(e){ return false; }
+}
+
+function triggerVideo(){
+  if(videoPlaying) return;
+  videoPlaying = true;
+
+  clearInterval(scanInterval);
+  document.getElementById('scan-hint').style.opacity = '0';
+
+  const banner = document.getElementById('found-banner');
+  banner.style.display = 'block';
+  setTimeout(() => { banner.style.display = 'none'; }, 2500);
+
+  const overlay = document.getElementById('video-overlay');
+  const vid = document.getElementById('overlay-video');
+
+  vid.src = orderData.videoData;
+  overlay.style.display = 'flex';
+  vid.play().catch(e => console.log('Autoplay blocked:', e));
+}
+
+function closeVideo(){
+  videoPlaying = false;
+  const vid = document.getElementById('overlay-video');
+  vid.pause(); vid.src = '';
+  document.getElementById('video-overlay').style.display = 'none';
+  document.getElementById('scan-hint').style.opacity = '1';
+  startScanning();
+}
+
+init();
+</script>
+</body>
+</html>
