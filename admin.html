@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SnapAndWrap Admin</title>
+<!-- Load MindAR compiler FIRST before anything else -->
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -15,7 +16,7 @@
 :root{
   --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--border:#2a2a38;
   --accent:#7c5cfc;--accent2:#fc5c7d;--text:#f0f0f8;--muted:#6b6b82;
-  --success:#22c55e;--warn:#f59e0b
+  --success:#22c55e
 }
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
 header{padding:1.2rem 2rem;border-bottom:1px solid var(--border);
@@ -48,8 +49,7 @@ input[type=text],input[type=tel]{
   transition:border-color .2s;margin-bottom:1rem}
 input:focus{border-color:var(--accent)}
 
-.upload-box{
-  border:2px dashed var(--border);border-radius:12px;padding:1.2rem;
+.upload-box{border:2px dashed var(--border);border-radius:12px;padding:1.2rem;
   text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1rem;
   background:var(--surface2);position:relative;overflow:hidden}
 .upload-box:hover{border-color:var(--accent)}
@@ -58,18 +58,16 @@ input:focus{border-color:var(--accent)}
 .upload-label{font-size:0.82rem;color:var(--muted)}
 .upload-name{font-size:0.78rem;color:var(--accent);margin-top:5px;font-weight:500}
 
-/* MIND COMPILE PROGRESS */
 .compile-wrap{display:none;margin-bottom:1rem;
   background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem}
-.compile-title{font-size:0.82rem;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.compile-title{font-size:0.82rem;color:var(--muted);margin-bottom:8px}
 .compile-bar-bg{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
 .compile-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
-  width:0%;transition:width .4s;border-radius:3px}
+  width:0%;transition:width .3s;border-radius:3px}
 .compile-status{font-size:0.75rem;color:var(--muted);margin-top:6px}
 
 .btn{width:100%;padding:12px;border:none;border-radius:12px;
-  font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;
-  cursor:pointer;transition:all .2s}
+  font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all .2s}
 .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
 .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
 .btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none}
@@ -86,9 +84,6 @@ input:focus{border-color:var(--accent)}
 .orders-table td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 .orders-table tr:last-child td{border-bottom:none}
 .orders-table tr:hover td{background:var(--surface2)}
-
-.badge-active{display:inline-block;padding:3px 10px;border-radius:20px;
-  font-size:0.7rem;font-weight:600;background:#052e16;color:var(--success)}
 .qr-btn{padding:5px 11px;border-radius:8px;border:1px solid var(--accent);
   background:transparent;color:var(--accent);font-size:0.75rem;cursor:pointer;
   font-family:'DM Sans',sans-serif;transition:all .2s}
@@ -111,8 +106,12 @@ input:focus{border-color:var(--accent)}
 .modal-close{padding:8px 20px;border-radius:10px;border:1px solid var(--border);
   background:transparent;color:var(--muted);cursor:pointer;
   font-family:'DM Sans',sans-serif;font-size:0.85rem;margin-top:6px}
-
 .empty{text-align:center;padding:2.5rem;color:var(--muted);font-size:0.88rem}
+
+/* debug box */
+.debug-box{background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;font-size:0.75rem;color:var(--muted);
+  margin-bottom:1rem;font-family:monospace}
 </style>
 </head>
 <body>
@@ -125,21 +124,21 @@ input:focus{border-color:var(--accent)}
 </header>
 
 <div class="container">
-  <div class="grid">
+  <!-- MindAR status check -->
+  <div class="debug-box" id="mindar-status">⏳ Checking MindAR library...</div>
 
+  <div class="grid">
     <div class="card">
       <div class="card-title">Add New Order</div>
 
       <label>Customer Name</label>
       <input type="text" id="cust-name" placeholder="e.g. Priya Sharma">
-
       <label>Phone Number</label>
       <input type="tel" id="cust-phone" placeholder="e.g. 9876543210">
-
       <label>Order ID</label>
       <input type="text" id="order-id" readonly style="color:var(--muted)">
 
-      <label>Frame Photo (the physical frame image to scan)</label>
+      <label>Frame Photo (clear, well-lit photo of the frame)</label>
       <div class="upload-box">
         <input type="file" id="frame-file" accept="image/*" onchange="handleFrame(this)">
         <div class="upload-icon">🖼️</div>
@@ -147,7 +146,7 @@ input:focus{border-color:var(--accent)}
         <div class="upload-name" id="frame-name"></div>
       </div>
 
-      <label>Customer Video (MP4, max 30MB)</label>
+      <label>Customer Video (MP4, under 25MB)</label>
       <div class="upload-box">
         <input type="file" id="video-file" accept="video/*" onchange="handleVideo(this)">
         <div class="upload-icon">🎬</div>
@@ -155,7 +154,6 @@ input:focus{border-color:var(--accent)}
         <div class="upload-name" id="video-name"></div>
       </div>
 
-      <!-- MIND compile progress -->
       <div class="compile-wrap" id="compile-wrap">
         <div class="compile-title">⚙️ Generating AR tracker (.mind file)...</div>
         <div class="compile-bar-bg"><div class="compile-bar" id="compile-bar"></div></div>
@@ -172,7 +170,6 @@ input:focus{border-color:var(--accent)}
       <div class="card-title">All Orders</div>
       <div id="orders-container"><div class="empty">No orders yet.</div></div>
     </div>
-
   </div>
 </div>
 
@@ -183,14 +180,29 @@ input:focus{border-color:var(--accent)}
     <div class="modal-sub" id="modal-oid">Order ID</div>
     <div id="qr-canvas"></div>
     <div class="copy-link" id="modal-link" onclick="copyLink()">Click to copy link</div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">
-      Screenshot QR → send via WhatsApp to customer
-    </div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Screenshot QR → send via WhatsApp</div>
     <button class="modal-close" onclick="document.getElementById('qr-modal').classList.remove('open')">Close</button>
   </div>
 </div>
 
 <script>
+// Check MindAR loaded correctly
+window.addEventListener('load', () => {
+  const statusEl = document.getElementById('mindar-status');
+  try {
+    if(typeof MINDAR !== 'undefined' && MINDAR.IMAGE && MINDAR.IMAGE.Compiler) {
+      statusEl.textContent = '✅ MindAR AR compiler loaded successfully';
+      statusEl.style.color = '#22c55e';
+    } else {
+      statusEl.textContent = '❌ MindAR loaded but Compiler not found. Refresh page.';
+      statusEl.style.color = '#f87171';
+    }
+  } catch(e) {
+    statusEl.textContent = '❌ MindAR failed: ' + e.message;
+    statusEl.style.color = '#f87171';
+  }
+});
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -207,119 +219,116 @@ function genOrderId(){
 }
 document.getElementById('order-id').value = genOrderId();
 
-function handleFrame(i){ frameFile = i.files[0]; document.getElementById('frame-name').textContent = frameFile ? '✓ '+frameFile.name : ''; }
-function handleVideo(i){ videoFile = i.files[0]; document.getElementById('video-name').textContent = videoFile ? '✓ '+videoFile.name : ''; }
-
+function handleFrame(i){ frameFile=i.files[0]; document.getElementById('frame-name').textContent=frameFile?'✓ '+frameFile.name:''; }
+function handleVideo(i){ videoFile=i.files[0]; document.getElementById('video-name').textContent=videoFile?'✓ '+videoFile.name:''; }
 function showStatus(m,t){ const e=document.getElementById('status-msg'); e.textContent=m; e.className='status '+t; e.style.display='block'; }
 function setCompile(pct,msg){ document.getElementById('compile-bar').style.width=pct+'%'; document.getElementById('compile-status').textContent=msg; }
 
 function toBase64(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result);
-    r.onerror=()=>rej(new Error('Read failed'));
-    r.readAsDataURL(file);
-  });
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(new Error('Read failed')); r.readAsDataURL(file); });
 }
 
 async function uploadToImgBB(file){
-  const fd = new FormData(); fd.append('image', file);
-  const r = await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_API_KEY,{method:'POST',body:fd});
-  const d = await r.json();
-  if(!d.success) throw new Error('ImgBB upload failed: '+JSON.stringify(d));
+  const fd=new FormData(); fd.append('image',file);
+  const r=await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_API_KEY,{method:'POST',body:fd});
+  const d=await r.json();
+  if(!d.success) throw new Error('ImgBB upload failed');
   return d.data.url;
 }
 
 async function compileMindFile(imageFile){
-  return new Promise(async (resolve, reject) => {
-    try {
-      const img = new Image();
-      const url = URL.createObjectURL(imageFile);
-      img.onload = async () => {
-        try {
-          setCompile(20, 'Processing image...');
-          const compiler = new MINDAR.IMAGE.Compiler();
-          setCompile(40, 'Extracting features...');
-          await compiler.compileImageTargets([img], (progress) => {
-            setCompile(40 + Math.round(progress * 40), 'Compiling... ' + Math.round(progress*100) + '%');
-          });
-          setCompile(90, 'Finalizing .mind file...');
-          const buffer = await compiler.exportData();
-          const blob = new Blob([buffer]);
-          const reader = new FileReader();
-          reader.onload = () => { setCompile(100,'Done!'); resolve(reader.result); };
-          reader.onerror = () => reject(new Error('Export failed'));
-          reader.readAsDataURL(blob);
-        } catch(e){ reject(e); }
-      };
-      img.onerror = () => reject(new Error('Image load failed'));
-      img.src = url;
-    } catch(e){ reject(e); }
+  return new Promise((resolve, reject)=>{
+    // Verify MINDAR is available
+    if(typeof MINDAR === 'undefined' || !MINDAR.IMAGE || !MINDAR.IMAGE.Compiler){
+      reject(new Error('MindAR Compiler not available. Please refresh the page and try again.'));
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const objectUrl = URL.createObjectURL(imageFile);
+
+    img.onload = async () => {
+      try {
+        setCompile(15, 'Image loaded...');
+        const compiler = new MINDAR.IMAGE.Compiler();
+
+        setCompile(30, 'Extracting AR features...');
+        await compiler.compileImageTargets([img], (progress)=>{
+          const pct = 30 + Math.round(progress * 55);
+          setCompile(pct, 'Processing... ' + Math.round(progress*100) + '%');
+        });
+
+        setCompile(90, 'Exporting .mind data...');
+        const buffer = await compiler.exportData();
+
+        const blob = new Blob([buffer], {type:'application/octet-stream'});
+        const reader = new FileReader();
+        reader.onload = ()=>{ setCompile(100,'✅ AR tracker ready!'); resolve(reader.result); };
+        reader.onerror = ()=>reject(new Error('Export read failed'));
+        reader.readAsDataURL(blob);
+
+        URL.revokeObjectURL(objectUrl);
+      } catch(e){ reject(e); }
+    };
+
+    img.onerror = ()=>{ URL.revokeObjectURL(objectUrl); reject(new Error('Could not load image. Try a JPG or PNG file.')); };
+    img.src = objectUrl;
   });
 }
 
 async function submitOrder(){
-  const name = document.getElementById('cust-name').value.trim();
-  const phone = document.getElementById('cust-phone').value.trim();
-  const orderId = document.getElementById('order-id').value.trim();
+  const name=document.getElementById('cust-name').value.trim();
+  const phone=document.getElementById('cust-phone').value.trim();
+  const orderId=document.getElementById('order-id').value.trim();
 
-  if(!name){ showStatus('Enter customer name','error'); return; }
-  if(!phone){ showStatus('Enter phone number','error'); return; }
-  if(!frameFile){ showStatus('Upload frame photo','error'); return; }
-  if(!videoFile){ showStatus('Upload video','error'); return; }
+  if(!name){showStatus('Enter customer name','error');return;}
+  if(!phone){showStatus('Enter phone number','error');return;}
+  if(!frameFile){showStatus('Upload frame photo','error');return;}
+  if(!videoFile){showStatus('Upload video','error');return;}
+  if(videoFile.size>26214400){showStatus('Video too large! Use a video under 25MB.','error');return;}
 
-  if(videoFile.size > 31457280){
-    showStatus('Video too large! Please use a video under 30MB.','error'); return;
+  if(typeof MINDAR==='undefined'||!MINDAR.IMAGE||!MINDAR.IMAGE.Compiler){
+    showStatus('MindAR not loaded. Please refresh the page and try again.','error'); return;
   }
 
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;
 
   try {
-    // Step 1: Upload frame to ImgBB
     showStatus('Uploading frame image...','loading');
     const frameURL = await uploadToImgBB(frameFile);
 
-    // Step 2: Compile .mind file from frame image
-    showStatus('Generating AR tracker (.mind file)...','loading');
-    document.getElementById('compile-wrap').style.display = 'block';
-    setCompile(10, 'Starting...');
+    showStatus('Generating AR tracker — this takes 10-30 seconds...','loading');
+    document.getElementById('compile-wrap').style.display='block';
+    setCompile(5,'Starting AR compiler...');
     const mindFileData = await compileMindFile(frameFile);
-    document.getElementById('compile-wrap').style.display = 'none';
+    document.getElementById('compile-wrap').style.display='none';
 
-    // Step 3: Convert video to base64
     showStatus('Processing video...','loading');
     const videoData = await toBase64(videoFile);
 
-    // Step 4: Save to Firebase
-    showStatus('Saving order...','loading');
-    await db.ref('orders/' + orderId).set({
-      customerName: name,
-      phone: phone,
-      orderId: orderId,
-      frameURL: frameURL,
-      mindFileData: mindFileData,
-      videoData: videoData,
-      scanCount: 0,
-      orderDate: new Date().toISOString(),
-      status: 'active'
+    showStatus('Saving to database...','loading');
+    await db.ref('orders/'+orderId).set({
+      customerName:name, phone:phone, orderId:orderId,
+      frameURL:frameURL, mindFileData:mindFileData, videoData:videoData,
+      scanCount:0, orderDate:new Date().toISOString(), status:'active'
     });
 
-    showStatus('✅ Order added! AR tracker ready.','success');
+    showStatus('✅ Order added! AR is ready.','success');
 
     const arLink = window.location.origin +
       window.location.pathname.replace('admin.html','') +
-      'index.html?order=' + orderId;
+      'index.html?order='+orderId;
     showQR(name, orderId, arLink);
 
-    // Reset form
     document.getElementById('cust-name').value='';
     document.getElementById('cust-phone').value='';
     document.getElementById('frame-name').textContent='';
     document.getElementById('video-name').textContent='';
     document.getElementById('frame-file').value='';
     document.getElementById('video-file').value='';
-    document.getElementById('order-id').value = genOrderId();
+    document.getElementById('order-id').value=genOrderId();
     frameFile=null; videoFile=null;
 
   } catch(e){
@@ -327,18 +336,17 @@ async function submitOrder(){
     console.error(e);
     document.getElementById('compile-wrap').style.display='none';
   }
-  btn.disabled = false;
+  btn.disabled=false;
 }
 
 function showQR(name, oid, link){
-  currentLink = link;
-  document.getElementById('modal-name').textContent = name;
-  document.getElementById('modal-oid').textContent = oid;
-  document.getElementById('modal-link').textContent = link;
-  document.getElementById('qr-canvas').innerHTML = '';
+  currentLink=link;
+  document.getElementById('modal-name').textContent=name;
+  document.getElementById('modal-oid').textContent=oid;
+  document.getElementById('modal-link').textContent=link;
+  document.getElementById('qr-canvas').innerHTML='';
   new QRCode(document.getElementById('qr-canvas'),{
-    text:link,width:200,height:200,
-    colorDark:'#000',colorLight:'#fff',
+    text:link,width:200,height:200,colorDark:'#000',colorLight:'#fff',
     correctLevel:QRCode.CorrectLevel.H
   });
   document.getElementById('qr-modal').classList.add('open');
@@ -347,32 +355,33 @@ function showQR(name, oid, link){
 function copyLink(){
   navigator.clipboard.writeText(currentLink);
   document.getElementById('modal-link').textContent='✓ Copied!';
-  setTimeout(()=>{ document.getElementById('modal-link').textContent=currentLink; },2000);
+  setTimeout(()=>{document.getElementById('modal-link').textContent=currentLink;},2000);
 }
 
 function loadOrders(){
-  db.ref('orders').on('value', snap => {
-    const data = snap.val();
-    const c = document.getElementById('orders-container');
-    if(!data){ c.innerHTML='<div class="empty">No orders yet.</div>';
+  db.ref('orders').on('value', snap=>{
+    const data=snap.val();
+    const c=document.getElementById('orders-container');
+    if(!data){
+      c.innerHTML='<div class="empty">No orders yet.</div>';
       document.getElementById('total-orders').textContent='0';
-      document.getElementById('total-scans').textContent='0'; return; }
-    const orders = Object.values(data).reverse();
-    document.getElementById('total-orders').textContent = orders.length;
-    document.getElementById('total-scans').textContent = orders.reduce((s,o)=>s+(o.scanCount||0),0);
-    const base = window.location.origin + window.location.pathname.replace('admin.html','') + 'index.html';
-    let html = '<table class="orders-table"><thead><tr><th>Customer</th><th>Order</th><th>Scans</th><th>AR</th><th>Actions</th></tr></thead><tbody>';
+      document.getElementById('total-scans').textContent='0'; return;
+    }
+    const orders=Object.values(data).reverse();
+    document.getElementById('total-orders').textContent=orders.length;
+    document.getElementById('total-scans').textContent=orders.reduce((s,o)=>s+(o.scanCount||0),0);
+    const base=window.location.origin+window.location.pathname.replace('admin.html','')+'index.html';
+    let html='<table class="orders-table"><thead><tr><th>Customer</th><th>Order</th><th>Scans</th><th>AR</th><th>Action</th></tr></thead><tbody>';
     orders.forEach(o=>{
-      const link = base+'?order='+o.orderId;
-      const arReady = o.mindFileData ? '✅' : '❌';
+      const link=base+'?order='+o.orderId;
       html+=`<tr>
         <td><div style="font-weight:500">${o.customerName}</div><div style="font-size:0.72rem;color:var(--muted)">${o.phone}</div></td>
         <td style="font-size:0.75rem;color:var(--muted);font-family:monospace">${o.orderId}</td>
-        <td style="font-size:0.82rem">👁 ${o.scanCount||0}</td>
-        <td style="font-size:1rem">${arReady}</td>
+        <td>👁 ${o.scanCount||0}</td>
+        <td>${o.mindFileData?'✅':'❌'}</td>
         <td>
           <button class="qr-btn" onclick="showQR('${o.customerName}','${o.orderId}','${link}')">QR</button>
-          <button class="del-btn" onclick="if(confirm('Delete?'))db.ref('orders/${o.orderId}').remove()">Del</button>
+          <button class="del-btn" onclick="if(confirm('Delete order ${o.orderId}?'))db.ref('orders/${o.orderId}').remove()">Del</button>
         </td>
       </tr>`;
     });
