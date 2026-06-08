@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SnapAndWrap Admin</title>
-<!-- Load MindAR compiler FIRST before anything else -->
-<script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -15,8 +13,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--border:#2a2a38;
-  --accent:#7c5cfc;--accent2:#fc5c7d;--text:#f0f0f8;--muted:#6b6b82;
-  --success:#22c55e
+  --accent:#7c5cfc;--accent2:#fc5c7d;--text:#f0f0f8;--muted:#6b6b82;--success:#22c55e
 }
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
 header{padding:1.2rem 2rem;border-bottom:1px solid var(--border);
@@ -40,6 +37,20 @@ header{padding:1.2rem 2rem;border-bottom:1px solid var(--border);
 .card-title::before{content:'';width:4px;height:18px;
   background:linear-gradient(var(--accent),var(--accent2));border-radius:2px}
 
+/* HOW TO BANNER */
+.how-to{background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.5rem}
+.how-to-title{font-size:0.82rem;font-weight:600;color:var(--accent);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px}
+.steps-row{display:flex;gap:0;flex-wrap:wrap}
+.how-step{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);padding:4px 0}
+.how-step-num{width:20px;height:20px;border-radius:50%;background:var(--accent);
+  color:#fff;font-size:0.68rem;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.how-arrow{color:var(--border);margin:0 6px;font-size:0.9rem}
+.mindar-link{color:var(--accent);text-decoration:none;font-weight:600}
+.mindar-link:hover{text-decoration:underline}
+
 label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:5px;
   text-transform:uppercase;letter-spacing:.04em}
 input[type=text],input[type=tel]{
@@ -52,25 +63,26 @@ input:focus{border-color:var(--accent)}
 .upload-box{border:2px dashed var(--border);border-radius:12px;padding:1.2rem;
   text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1rem;
   background:var(--surface2);position:relative;overflow:hidden}
-.upload-box:hover{border-color:var(--accent)}
+.upload-box:hover{border-color:var(--accent);background:#1a1a28}
 .upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .upload-icon{font-size:1.8rem;margin-bottom:6px}
 .upload-label{font-size:0.82rem;color:var(--muted)}
-.upload-name{font-size:0.78rem;color:var(--accent);margin-top:5px;font-weight:500}
+.upload-sub{font-size:0.72rem;color:var(--muted);margin-top:3px;opacity:.7}
+.upload-name{font-size:0.78rem;color:var(--accent);margin-top:5px;font-weight:500;min-height:18px}
+.upload-box.has-file{border-color:var(--accent);border-style:solid}
 
-.compile-wrap{display:none;margin-bottom:1rem;
-  background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem}
-.compile-title{font-size:0.82rem;color:var(--muted);margin-bottom:8px}
-.compile-bar-bg{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
-.compile-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+.progress-wrap{display:none;margin-bottom:1rem}
+.progress-label{font-size:0.75rem;color:var(--muted);margin-bottom:6px}
+.progress-bg{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
   width:0%;transition:width .3s;border-radius:3px}
-.compile-status{font-size:0.75rem;color:var(--muted);margin-top:6px}
 
-.btn{width:100%;padding:12px;border:none;border-radius:12px;
+.btn{width:100%;padding:13px;border:none;border-radius:12px;
   font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all .2s}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 4px 20px rgba(124,92,252,.3)}
 .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
-.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
 
 .status{padding:10px 14px;border-radius:10px;font-size:0.85rem;margin-top:10px;display:none}
 .status.success{background:#052e16;color:var(--success);border:1px solid #166534}
@@ -107,11 +119,6 @@ input:focus{border-color:var(--accent)}
   background:transparent;color:var(--muted);cursor:pointer;
   font-family:'DM Sans',sans-serif;font-size:0.85rem;margin-top:6px}
 .empty{text-align:center;padding:2.5rem;color:var(--muted);font-size:0.88rem}
-
-/* debug box */
-.debug-box{background:var(--surface2);border:1px solid var(--border);
-  border-radius:10px;padding:10px 14px;font-size:0.75rem;color:var(--muted);
-  margin-bottom:1rem;font-family:monospace}
 </style>
 </head>
 <body>
@@ -124,8 +131,18 @@ input:focus{border-color:var(--accent)}
 </header>
 
 <div class="container">
-  <!-- MindAR status check -->
-  <div class="debug-box" id="mindar-status">⏳ Checking MindAR library...</div>
+
+  <!-- HOW TO GUIDE -->
+  <div class="how-to">
+    <div class="how-to-title">📋 How to add each order (3 steps)</div>
+    <div class="steps-row">
+      <div class="how-step"><span class="how-step-num">1</span> Go to <a class="mindar-link" href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">MindAR Compiler ↗</a> → upload frame photo → download .mind file</div>
+      <span class="how-arrow">→</span>
+      <div class="how-step"><span class="how-step-num">2</span> Fill form below: customer name, phone, upload .mind file + video</div>
+      <span class="how-arrow">→</span>
+      <div class="how-step"><span class="how-step-num">3</span> Click Add Order → get QR → send to customer on WhatsApp</div>
+    </div>
+  </div>
 
   <div class="grid">
     <div class="card">
@@ -133,42 +150,54 @@ input:focus{border-color:var(--accent)}
 
       <label>Customer Name</label>
       <input type="text" id="cust-name" placeholder="e.g. Priya Sharma">
+
       <label>Phone Number</label>
       <input type="tel" id="cust-phone" placeholder="e.g. 9876543210">
+
       <label>Order ID</label>
       <input type="text" id="order-id" readonly style="color:var(--muted)">
 
-      <label>Frame Photo (clear, well-lit photo of the frame)</label>
-      <div class="upload-box">
-        <input type="file" id="frame-file" accept="image/*" onchange="handleFrame(this)">
+      <label>Frame Photo (for preview only)</label>
+      <div class="upload-box" id="frame-box">
+        <input type="file" id="frame-file" accept="image/*" onchange="handleFile(this,'frame')">
         <div class="upload-icon">🖼️</div>
         <div class="upload-label">Upload frame photo (JPG/PNG)</div>
+        <div class="upload-sub">Shown to customer as preview</div>
         <div class="upload-name" id="frame-name"></div>
       </div>
 
+      <label>.mind File (from MindAR compiler)</label>
+      <div class="upload-box" id="mind-box">
+        <input type="file" id="mind-file" accept=".mind" onchange="handleFile(this,'mind')">
+        <div class="upload-icon">🧠</div>
+        <div class="upload-label">Upload .mind file</div>
+        <div class="upload-sub">Get this from MindAR compiler website</div>
+        <div class="upload-name" id="mind-name"></div>
+      </div>
+
       <label>Customer Video (MP4, under 25MB)</label>
-      <div class="upload-box">
-        <input type="file" id="video-file" accept="video/*" onchange="handleVideo(this)">
+      <div class="upload-box" id="video-box">
+        <input type="file" id="video-file" accept="video/*" onchange="handleFile(this,'video')">
         <div class="upload-icon">🎬</div>
         <div class="upload-label">Upload video (MP4 recommended)</div>
+        <div class="upload-sub">This plays when frame is detected</div>
         <div class="upload-name" id="video-name"></div>
       </div>
 
-      <div class="compile-wrap" id="compile-wrap">
-        <div class="compile-title">⚙️ Generating AR tracker (.mind file)...</div>
-        <div class="compile-bar-bg"><div class="compile-bar" id="compile-bar"></div></div>
-        <div class="compile-status" id="compile-status">Preparing...</div>
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-label" id="progress-label">Uploading...</div>
+        <div class="progress-bg"><div class="progress-fill" id="progress-fill"></div></div>
       </div>
 
       <button class="btn btn-primary" id="submit-btn" onclick="submitOrder()">
-        Add Order & Generate QR
+        ✨ Add Order & Generate QR
       </button>
       <div class="status" id="status-msg"></div>
     </div>
 
     <div class="card" style="overflow:auto">
       <div class="card-title">All Orders</div>
-      <div id="orders-container"><div class="empty">No orders yet.</div></div>
+      <div id="orders-container"><div class="empty">No orders yet. Add your first order!</div></div>
     </div>
   </div>
 </div>
@@ -180,33 +209,19 @@ input:focus{border-color:var(--accent)}
     <div class="modal-sub" id="modal-oid">Order ID</div>
     <div id="qr-canvas"></div>
     <div class="copy-link" id="modal-link" onclick="copyLink()">Click to copy link</div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Screenshot QR → send via WhatsApp</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">
+      📱 Screenshot QR → send via WhatsApp to customer
+    </div>
     <button class="modal-close" onclick="document.getElementById('qr-modal').classList.remove('open')">Close</button>
   </div>
 </div>
 
 <script>
-// Check MindAR loaded correctly
-window.addEventListener('load', () => {
-  const statusEl = document.getElementById('mindar-status');
-  try {
-    if(typeof MINDAR !== 'undefined' && MINDAR.IMAGE && MINDAR.IMAGE.Compiler) {
-      statusEl.textContent = '✅ MindAR AR compiler loaded successfully';
-      statusEl.style.color = '#22c55e';
-    } else {
-      statusEl.textContent = '❌ MindAR loaded but Compiler not found. Refresh page.';
-      statusEl.style.color = '#f87171';
-    }
-  } catch(e) {
-    statusEl.textContent = '❌ MindAR failed: ' + e.message;
-    statusEl.style.color = '#f87171';
-  }
-});
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let frameFile = null, videoFile = null, currentLink = '';
+let files = { frame: null, mind: null, video: null };
+let currentLink = '';
 
 function genOrderId(){
   const d = new Date();
@@ -219,134 +234,125 @@ function genOrderId(){
 }
 document.getElementById('order-id').value = genOrderId();
 
-function handleFrame(i){ frameFile=i.files[0]; document.getElementById('frame-name').textContent=frameFile?'✓ '+frameFile.name:''; }
-function handleVideo(i){ videoFile=i.files[0]; document.getElementById('video-name').textContent=videoFile?'✓ '+videoFile.name:''; }
-function showStatus(m,t){ const e=document.getElementById('status-msg'); e.textContent=m; e.className='status '+t; e.style.display='block'; }
-function setCompile(pct,msg){ document.getElementById('compile-bar').style.width=pct+'%'; document.getElementById('compile-status').textContent=msg; }
+function handleFile(input, type){
+  const file = input.files[0];
+  if(!file) return;
+  files[type] = file;
+  document.getElementById(type+'-name').textContent = '✓ ' + file.name;
+  document.getElementById(type+'-box').classList.add('has-file');
+}
+
+function showStatus(m,t){
+  const e = document.getElementById('status-msg');
+  e.textContent = m; e.className = 'status '+t; e.style.display = 'block';
+}
+
+function setProgress(pct, label){
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
 
 function toBase64(file){
-  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(new Error('Read failed')); r.readAsDataURL(file); });
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error('Read failed'));
+    r.readAsDataURL(file);
+  });
 }
 
 async function uploadToImgBB(file){
-  const fd=new FormData(); fd.append('image',file);
-  const r=await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_API_KEY,{method:'POST',body:fd});
-  const d=await r.json();
+  const fd = new FormData(); fd.append('image', file);
+  const r = await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_API_KEY,{method:'POST',body:fd});
+  const d = await r.json();
   if(!d.success) throw new Error('ImgBB upload failed');
   return d.data.url;
 }
 
-async function compileMindFile(imageFile){
-  return new Promise((resolve, reject)=>{
-    // Verify MINDAR is available
-    if(typeof MINDAR === 'undefined' || !MINDAR.IMAGE || !MINDAR.IMAGE.Compiler){
-      reject(new Error('MindAR Compiler not available. Please refresh the page and try again.'));
-      return;
-    }
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    const objectUrl = URL.createObjectURL(imageFile);
-
-    img.onload = async () => {
-      try {
-        setCompile(15, 'Image loaded...');
-        const compiler = new MINDAR.IMAGE.Compiler();
-
-        setCompile(30, 'Extracting AR features...');
-        await compiler.compileImageTargets([img], (progress)=>{
-          const pct = 30 + Math.round(progress * 55);
-          setCompile(pct, 'Processing... ' + Math.round(progress*100) + '%');
-        });
-
-        setCompile(90, 'Exporting .mind data...');
-        const buffer = await compiler.exportData();
-
-        const blob = new Blob([buffer], {type:'application/octet-stream'});
-        const reader = new FileReader();
-        reader.onload = ()=>{ setCompile(100,'✅ AR tracker ready!'); resolve(reader.result); };
-        reader.onerror = ()=>reject(new Error('Export read failed'));
-        reader.readAsDataURL(blob);
-
-        URL.revokeObjectURL(objectUrl);
-      } catch(e){ reject(e); }
-    };
-
-    img.onerror = ()=>{ URL.revokeObjectURL(objectUrl); reject(new Error('Could not load image. Try a JPG or PNG file.')); };
-    img.src = objectUrl;
-  });
-}
-
 async function submitOrder(){
-  const name=document.getElementById('cust-name').value.trim();
-  const phone=document.getElementById('cust-phone').value.trim();
-  const orderId=document.getElementById('order-id').value.trim();
+  const name = document.getElementById('cust-name').value.trim();
+  const phone = document.getElementById('cust-phone').value.trim();
+  const orderId = document.getElementById('order-id').value.trim();
 
-  if(!name){showStatus('Enter customer name','error');return;}
-  if(!phone){showStatus('Enter phone number','error');return;}
-  if(!frameFile){showStatus('Upload frame photo','error');return;}
-  if(!videoFile){showStatus('Upload video','error');return;}
-  if(videoFile.size>26214400){showStatus('Video too large! Use a video under 25MB.','error');return;}
+  if(!name){ showStatus('Please enter customer name','error'); return; }
+  if(!phone){ showStatus('Please enter phone number','error'); return; }
+  if(!files.frame){ showStatus('Please upload frame photo','error'); return; }
+  if(!files.mind){ showStatus('Please upload .mind file (from MindAR compiler)','error'); return; }
+  if(!files.video){ showStatus('Please upload customer video','error'); return; }
+  if(files.video.size > 26214400){ showStatus('Video too large! Please use a video under 25MB.','error'); return; }
 
-  if(typeof MINDAR==='undefined'||!MINDAR.IMAGE||!MINDAR.IMAGE.Compiler){
-    showStatus('MindAR not loaded. Please refresh the page and try again.','error'); return;
-  }
-
-  const btn=document.getElementById('submit-btn');
-  btn.disabled=true;
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
 
   try {
+    // Step 1: Upload frame preview to ImgBB
+    setProgress(15, 'Uploading frame preview...');
     showStatus('Uploading frame image...','loading');
-    const frameURL = await uploadToImgBB(frameFile);
+    const frameURL = await uploadToImgBB(files.frame);
 
-    showStatus('Generating AR tracker — this takes 10-30 seconds...','loading');
-    document.getElementById('compile-wrap').style.display='block';
-    setCompile(5,'Starting AR compiler...');
-    const mindFileData = await compileMindFile(frameFile);
-    document.getElementById('compile-wrap').style.display='none';
+    // Step 2: Read .mind file as base64
+    setProgress(35, 'Reading .mind file...');
+    showStatus('Processing .mind file...','loading');
+    const mindFileData = await toBase64(files.mind);
 
+    // Step 3: Read video as base64
+    setProgress(60, 'Processing video...');
     showStatus('Processing video...','loading');
-    const videoData = await toBase64(videoFile);
+    const videoData = await toBase64(files.video);
 
-    showStatus('Saving to database...','loading');
-    await db.ref('orders/'+orderId).set({
-      customerName:name, phone:phone, orderId:orderId,
-      frameURL:frameURL, mindFileData:mindFileData, videoData:videoData,
-      scanCount:0, orderDate:new Date().toISOString(), status:'active'
+    // Step 4: Save to Firebase
+    setProgress(85, 'Saving to database...');
+    showStatus('Saving order...','loading');
+    await db.ref('orders/' + orderId).set({
+      customerName: name,
+      phone: phone,
+      orderId: orderId,
+      frameURL: frameURL,
+      mindFileData: mindFileData,
+      videoData: videoData,
+      scanCount: 0,
+      orderDate: new Date().toISOString(),
+      status: 'active'
     });
 
-    showStatus('✅ Order added! AR is ready.','success');
+    setProgress(100, 'Done!');
+    showStatus('✅ Order added successfully! AR is ready.','success');
 
     const arLink = window.location.origin +
       window.location.pathname.replace('admin.html','') +
-      'index.html?order='+orderId;
+      'index.html?order=' + orderId;
     showQR(name, orderId, arLink);
 
-    document.getElementById('cust-name').value='';
-    document.getElementById('cust-phone').value='';
-    document.getElementById('frame-name').textContent='';
-    document.getElementById('video-name').textContent='';
-    document.getElementById('frame-file').value='';
-    document.getElementById('video-file').value='';
-    document.getElementById('order-id').value=genOrderId();
-    frameFile=null; videoFile=null;
+    // Reset form
+    document.getElementById('cust-name').value = '';
+    document.getElementById('cust-phone').value = '';
+    ['frame','mind','video'].forEach(t=>{
+      document.getElementById(t+'-name').textContent = '';
+      document.getElementById(t+'-file').value = '';
+      document.getElementById(t+'-box').classList.remove('has-file');
+      files[t] = null;
+    });
+    document.getElementById('order-id').value = genOrderId();
+    setTimeout(()=>{ document.getElementById('progress-wrap').style.display='none'; }, 2000);
 
   } catch(e){
-    showStatus('Error: '+e.message,'error');
+    showStatus('Error: ' + e.message, 'error');
     console.error(e);
-    document.getElementById('compile-wrap').style.display='none';
+    document.getElementById('progress-wrap').style.display = 'none';
   }
-  btn.disabled=false;
+  btn.disabled = false;
 }
 
 function showQR(name, oid, link){
-  currentLink=link;
-  document.getElementById('modal-name').textContent=name;
-  document.getElementById('modal-oid').textContent=oid;
-  document.getElementById('modal-link').textContent=link;
-  document.getElementById('qr-canvas').innerHTML='';
+  currentLink = link;
+  document.getElementById('modal-name').textContent = name;
+  document.getElementById('modal-oid').textContent = oid;
+  document.getElementById('modal-link').textContent = link;
+  document.getElementById('qr-canvas').innerHTML = '';
   new QRCode(document.getElementById('qr-canvas'),{
-    text:link,width:200,height:200,colorDark:'#000',colorLight:'#fff',
+    text:link, width:200, height:200,
+    colorDark:'#000', colorLight:'#fff',
     correctLevel:QRCode.CorrectLevel.H
   });
   document.getElementById('qr-modal').classList.add('open');
@@ -354,39 +360,43 @@ function showQR(name, oid, link){
 
 function copyLink(){
   navigator.clipboard.writeText(currentLink);
-  document.getElementById('modal-link').textContent='✓ Copied!';
-  setTimeout(()=>{document.getElementById('modal-link').textContent=currentLink;},2000);
+  document.getElementById('modal-link').textContent = '✓ Copied!';
+  setTimeout(()=>{ document.getElementById('modal-link').textContent = currentLink; }, 2000);
 }
 
 function loadOrders(){
   db.ref('orders').on('value', snap=>{
-    const data=snap.val();
-    const c=document.getElementById('orders-container');
+    const data = snap.val();
+    const c = document.getElementById('orders-container');
     if(!data){
-      c.innerHTML='<div class="empty">No orders yet.</div>';
-      document.getElementById('total-orders').textContent='0';
-      document.getElementById('total-scans').textContent='0'; return;
+      c.innerHTML = '<div class="empty">No orders yet.</div>';
+      document.getElementById('total-orders').textContent = '0';
+      document.getElementById('total-scans').textContent = '0';
+      return;
     }
-    const orders=Object.values(data).reverse();
-    document.getElementById('total-orders').textContent=orders.length;
-    document.getElementById('total-scans').textContent=orders.reduce((s,o)=>s+(o.scanCount||0),0);
-    const base=window.location.origin+window.location.pathname.replace('admin.html','')+'index.html';
-    let html='<table class="orders-table"><thead><tr><th>Customer</th><th>Order</th><th>Scans</th><th>AR</th><th>Action</th></tr></thead><tbody>';
+    const orders = Object.values(data).reverse();
+    document.getElementById('total-orders').textContent = orders.length;
+    document.getElementById('total-scans').textContent = orders.reduce((s,o)=>s+(o.scanCount||0),0);
+    const base = window.location.origin +
+      window.location.pathname.replace('admin.html','') + 'index.html';
+    let html = '<table class="orders-table"><thead><tr><th>Customer</th><th>Order</th><th>Scans</th><th>AR</th><th>Actions</th></tr></thead><tbody>';
     orders.forEach(o=>{
-      const link=base+'?order='+o.orderId;
-      html+=`<tr>
-        <td><div style="font-weight:500">${o.customerName}</div><div style="font-size:0.72rem;color:var(--muted)">${o.phone}</div></td>
+      const link = base + '?order=' + o.orderId;
+      const arReady = o.mindFileData ? '✅ Ready' : '❌ No .mind';
+      html += `<tr>
+        <td><div style="font-weight:500">${o.customerName}</div>
+            <div style="font-size:0.72rem;color:var(--muted)">${o.phone}</div></td>
         <td style="font-size:0.75rem;color:var(--muted);font-family:monospace">${o.orderId}</td>
         <td>👁 ${o.scanCount||0}</td>
-        <td>${o.mindFileData?'✅':'❌'}</td>
+        <td style="font-size:0.78rem">${arReady}</td>
         <td>
           <button class="qr-btn" onclick="showQR('${o.customerName}','${o.orderId}','${link}')">QR</button>
           <button class="del-btn" onclick="if(confirm('Delete order ${o.orderId}?'))db.ref('orders/${o.orderId}').remove()">Del</button>
         </td>
       </tr>`;
     });
-    html+='</tbody></table>';
-    c.innerHTML=html;
+    html += '</tbody></table>';
+    c.innerHTML = html;
   });
 }
 loadOrders();
