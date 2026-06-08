@@ -7,6 +7,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -14,179 +17,166 @@
   --bg:#07070f;--surface:#10101a;--border:#22223a;
   --accent:#7c5cfc;--accent2:#fc5c7d;--text:#f0f0f8;--muted:#6b6b82
 }
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  overflow:hidden;position:relative}
 
-/* animated bg */
-.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.glow1{position:absolute;width:500px;height:500px;border-radius:50%;
-  background:radial-gradient(circle,rgba(124,92,252,.15),transparent 70%);
-  top:-100px;left:-100px;animation:float1 8s ease-in-out infinite}
-.glow2{position:absolute;width:400px;height:400px;border-radius:50%;
-  background:radial-gradient(circle,rgba(252,92,125,.12),transparent 70%);
-  bottom:-80px;right:-80px;animation:float2 10s ease-in-out infinite}
-@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,30px)}}
-@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,-20px)}}
+body{background:#000;font-family:'DM Sans',sans-serif;overflow:hidden;height:100vh;width:100vw}
 
-/* SPLASH */
-#splash{position:fixed;inset:0;background:var(--bg);z-index:100;
+/* ── SPLASH SCREEN ── */
+#splash{
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:opacity .6s,transform .6s;padding:2rem;text-align:center}
-#splash.hide{opacity:0;transform:scale(1.05);pointer-events:none}
-.logo-wrap{margin-bottom:2rem}
-.brand{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;
+  padding:2rem;text-align:center;transition:opacity .8s ease
+}
+#splash.fade-out{opacity:0;pointer-events:none}
+.brand{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
-.tagline{font-size:0.8rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:6px}
-.loader-ring{width:44px;height:44px;border:3px solid var(--border);
-  border-top-color:var(--accent);border-radius:50%;
-  animation:spin .7s linear infinite;margin:0 auto 1rem}
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.tagline{font-size:0.75rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2.5rem}
+.loader-ring{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.2rem}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-text{font-size:0.85rem;color:var(--muted)}
+#load-msg{font-size:0.9rem;color:var(--muted);line-height:1.6;max-width:280px}
 
-/* ERROR */
-#error-screen{position:fixed;inset:0;background:var(--bg);z-index:99;
+/* ── ERROR SCREEN ── */
+#error-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:9998;
   display:none;flex-direction:column;align-items:center;justify-content:center;
-  padding:2rem;text-align:center}
-.err-icon{font-size:3.5rem;margin-bottom:1.2rem}
-.err-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:10px}
-.err-msg{font-size:0.9rem;color:var(--muted);line-height:1.7;max-width:300px}
-
-/* MAIN VIEW */
-#main-view{position:relative;z-index:1;width:100%;max-width:420px;padding:1.5rem;
-  display:none;flex-direction:column;align-items:center;text-align:center}
-
-.customer-greeting{margin-bottom:1.5rem}
-.greeting-hi{font-size:0.85rem;color:var(--muted);margin-bottom:4px}
-.customer-name{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700}
-
-.frame-preview{
-  width:100%;max-width:320px;border-radius:20px;
-  border:2px solid var(--border);overflow:hidden;
-  position:relative;margin-bottom:1.5rem;
-  box-shadow:0 0 40px rgba(124,92,252,.2)
+  padding:2rem;text-align:center
 }
-.frame-preview img{width:100%;display:block;max-height:280px;object-fit:cover}
-.frame-label{
-  position:absolute;top:10px;left:10px;
-  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
-  padding:4px 10px;border-radius:20px;font-size:0.72rem;color:rgba(255,255,255,.7);
-  border:1px solid rgba(255,255,255,.1)
-}
+.err-icon{font-size:3.5rem;margin-bottom:1rem}
+.err-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:10px}
+.err-msg{font-size:0.85rem;color:var(--muted);line-height:1.7;max-width:300px}
 
-/* PLAY BUTTON */
-.play-btn{
-  width:100%;max-width:320px;padding:18px;border:none;border-radius:18px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#fff;font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;
-  cursor:pointer;letter-spacing:.03em;
-  box-shadow:0 8px 30px rgba(124,92,252,.4);
-  transition:transform .15s,box-shadow .15s;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  margin-bottom:1rem
+/* ── AR COMPILING SCREEN ── */
+#compile-screen{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9990;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;text-align:center
 }
-.play-btn:active{transform:scale(0.97);box-shadow:0 4px 15px rgba(124,92,252,.3)}
-.play-icon{font-size:1.3rem}
+.compile-icon{font-size:3rem;margin-bottom:1rem;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.7}}
+.compile-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;
+  color:var(--text);margin-bottom:8px}
+.compile-sub{font-size:0.82rem;color:var(--muted);line-height:1.6;max-width:280px;margin-bottom:1.5rem}
+.compile-bar-wrap{width:220px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.compile-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:2px;transition:width .3s}
+.compile-pct{margin-top:8px;font-size:0.8rem;color:var(--accent);font-weight:600}
 
-.hint-row{font-size:0.78rem;color:var(--muted);display:flex;align-items:center;
-  gap:6px;justify-content:center}
-
-.order-badge{
-  margin-top:1.2rem;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;padding:8px 16px;font-size:0.75rem;color:var(--muted)
-}
-.order-badge span{color:var(--accent);font-weight:500}
-
-/* FULLSCREEN VIDEO */
-#video-screen{
-  position:fixed;inset:0;background:#000;z-index:200;
-  display:none;flex-direction:column;align-items:center;justify-content:center
-}
-#video-screen.show{display:flex}
-#main-video{width:100%;height:100%;object-fit:contain;max-height:100vh}
-.video-top-bar{
-  position:fixed;top:0;left:0;right:0;z-index:201;
+/* ── SCAN INSTRUCTION HUD ── */
+#scan-hud{
+  position:fixed;top:0;left:0;right:0;z-index:500;
   padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(rgba(0,0,0,.6),transparent)
+  background:linear-gradient(rgba(0,0,0,.7),transparent);
+  display:none
 }
-.video-brand{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
+.hud-brand{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.close-btn{
-  width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.2);color:#fff;font-size:1rem;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  backdrop-filter:blur(8px)
+.hud-name{font-size:0.8rem;color:rgba(255,255,255,.7)}
+
+#scan-tip{
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  padding:1.2rem;text-align:center;
+  background:linear-gradient(transparent,rgba(0,0,0,.75));
+  display:none
 }
-.video-bottom{
-  position:fixed;bottom:0;left:0;right:0;z-index:201;
-  padding:1.5rem;text-align:center;
-  background:linear-gradient(transparent,rgba(0,0,0,.7))
+.scan-tip-text{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.1);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.15);border-radius:30px;
+  padding:10px 20px;font-size:0.85rem;color:rgba(255,255,255,.9)
 }
-.replay-btn{
-  padding:10px 28px;border-radius:30px;border:1px solid rgba(255,255,255,.3);
-  background:rgba(255,255,255,.1);color:#fff;font-family:'DM Sans',sans-serif;
-  font-size:0.85rem;cursor:pointer;backdrop-filter:blur(8px);
-  transition:background .2s
+.scan-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── CORNER FRAME TARGET UI ── */
+#target-frame{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:240px;height:240px;pointer-events:none;z-index:400;
+  display:none
 }
-.replay-btn:active{background:rgba(255,255,255,.2)}
+.corner{position:absolute;width:28px;height:28px;border-color:#fff;border-style:solid;opacity:.6}
+.corner.tl{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.corner.tr{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+.corner.bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+.corner.br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+
+/* ── VIDEO FOUND OVERLAY ── */
+#found-banner{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:800;display:none;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.15);border-radius:20px;
+  padding:1.2rem 2rem;text-align:center;
+  animation:popIn .3s ease-out
+}
+@keyframes popIn{from{transform:translate(-50%,-50%) scale(0.8);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.found-text{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:#22c55e}
+.found-sub{font-size:0.75rem;color:rgba(255,255,255,.6);margin-top:4px}
+
+/* ── A-FRAME CANVAS ── */
+a-scene{position:fixed!important;top:0;left:0;width:100vw!important;height:100vh!important;z-index:1}
 </style>
 </head>
 <body>
 
-<div class="bg-glow"><div class="glow1"></div><div class="glow2"></div></div>
-
 <!-- SPLASH -->
 <div id="splash">
-  <div class="logo-wrap">
-    <div class="brand">SnapAndWrap</div>
-    <div class="tagline">Magic Video Frame</div>
-  </div>
+  <div class="brand">SnapAndWrap</div>
+  <div class="tagline">Magic Video Frame</div>
   <div class="loader-ring"></div>
-  <div class="load-text" id="load-text">Loading your magic frame...</div>
+  <div id="load-msg">Loading your magic frame...</div>
 </div>
 
 <!-- ERROR -->
 <div id="error-screen">
   <div class="err-icon">😕</div>
   <div class="err-title" id="err-title">Something went wrong</div>
-  <div class="err-msg" id="err-msg">Please check your link and try again.</div>
+  <div class="err-msg" id="err-msg">Please use the QR code sent by SnapAndWrap.</div>
 </div>
 
-<!-- MAIN VIEW -->
-<div id="main-view">
-  <div class="customer-greeting">
-    <div class="greeting-hi">✨ Your Magic Frame is ready,</div>
-    <div class="customer-name" id="cust-name-display">—</div>
+<!-- COMPILING AR -->
+<div id="compile-screen">
+  <div class="compile-icon">🔮</div>
+  <div class="compile-title">Building Your AR Magic</div>
+  <div class="compile-sub">Preparing your frame for detection.<br>This takes about 20 seconds, only once!</div>
+  <div class="compile-bar-wrap">
+    <div class="compile-bar" id="compile-bar"></div>
   </div>
-
-  <div class="frame-preview">
-    <img id="frame-img" src="" alt="Your Frame">
-    <div class="frame-label">📸 Your Frame</div>
-  </div>
-
-  <button class="play-btn" id="play-btn" onclick="playVideo()">
-    <span class="play-icon">▶</span> Play My Video
-  </button>
-
-  <div class="hint-row">🔊 Turn up your volume for best experience</div>
-
-  <div class="order-badge">Order ID: <span id="order-id-display">—</span></div>
+  <div class="compile-pct" id="compile-pct">0%</div>
 </div>
 
-<!-- FULLSCREEN VIDEO -->
-<div id="video-screen">
-  <div class="video-top-bar">
-    <div class="video-brand">SnapAndWrap</div>
-    <button class="close-btn" onclick="closeVideo()">✕</button>
-  </div>
-  <video id="main-video" playsinline controls></video>
-  <div class="video-bottom">
-    <button class="replay-btn" onclick="replayVideo()">↺ Replay</button>
+<!-- HUD (shown during scanning) -->
+<div id="scan-hud">
+  <div class="hud-brand">SnapAndWrap</div>
+  <div class="hud-name" id="hud-name"></div>
+</div>
+
+<!-- TARGET CORNERS -->
+<div id="target-frame">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+</div>
+
+<!-- SCAN TIP -->
+<div id="scan-tip">
+  <div class="scan-tip-text">
+    <div class="scan-dot"></div>
+    Point camera at your Magic Frame photo
   </div>
 </div>
+
+<!-- FOUND BANNER -->
+<div id="found-banner">
+  <div class="found-text">✨ Magic Frame Detected!</div>
+  <div class="found-sub">Playing your video...</div>
+</div>
+
+<!-- A-FRAME AR SCENE (built dynamically) -->
+<div id="ar-container"></div>
 
 <script>
 firebase.initializeApp(firebaseConfig);
@@ -203,66 +193,183 @@ function showError(title, msg){
   document.getElementById('err-msg').textContent = msg;
 }
 
-function setLoad(t){ document.getElementById('load-text').textContent = t; }
+function setMsg(t){ document.getElementById('load-msg').textContent = t; }
+
+// Converts an image URL (possibly cross-origin) to a blob URL via canvas
+async function fetchImageAsBlob(url){
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
 
 async function init(){
   if(!orderId){
-    showError('Invalid Link','No order ID in this link. Please use the QR code sent by SnapAndWrap.');
+    showError('Invalid Link','No order ID found. Please scan the QR code sent by SnapAndWrap.');
     return;
   }
-  setLoad('Finding your order...');
-  try {
-    const snap = await db.ref('orders/' + orderId).get();
+  setMsg('Finding your order...');
+  try{
+    const snap = await db.ref('orders/'+orderId).get();
     if(!snap.exists()){
-      showError('Order Not Found','Order "'+orderId+'" not found. Contact SnapAndWrap on WhatsApp.');
+      showError('Order Not Found','Order "'+orderId+'" not found. Please contact SnapAndWrap on WhatsApp.');
       return;
     }
     const data = snap.val();
     db.ref('orders/'+orderId+'/scanCount').transaction(c=>(c||0)+1);
 
-    document.getElementById('cust-name-display').textContent = data.customerName;
-    document.getElementById('order-id-display').textContent = data.orderId;
-    document.getElementById('frame-img').src = data.frameURL;
+    setMsg('Preparing your frame image...');
 
-    const vid = document.getElementById('main-video');
-    vid.src = data.videoData;
-    vid.load();
+    // Fetch frame image as local blob (needed for MindAR compiler)
+    let frameBlob;
+    try{
+      frameBlob = await fetchImageAsBlob(data.frameURL);
+    } catch(e){
+      showError('Image Load Error','Could not load your frame image. Please try again or contact SnapAndWrap.');
+      return;
+    }
 
-    setLoad('Almost ready...');
-    setTimeout(()=>{
-      document.getElementById('splash').classList.add('hide');
-      setTimeout(()=>{
-        document.getElementById('splash').style.display='none';
-        document.getElementById('main-view').style.display='flex';
-      },600);
-    },1200);
+    setMsg('Building AR magic... (this takes ~20 sec)');
+
+    // Show compile screen
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('compile-screen').style.display = 'flex';
+
+    // Animate progress bar during compilation
+    let pct = 0;
+    const pctEl = document.getElementById('compile-pct');
+    const barEl = document.getElementById('compile-bar');
+    const pctInt = setInterval(()=>{
+      if(pct < 90){ pct += (90-pct)*0.04 + 0.3; }
+      barEl.style.width = Math.min(pct,90)+'%';
+      pctEl.textContent = Math.round(Math.min(pct,90))+'%';
+    }, 300);
+
+    // Compile the image target using MindAR's compiler
+    const compiler = new MINDAR.IMAGE.Compiler();
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = frameBlob;
+
+    await new Promise((res, rej)=>{
+      img.onload = res;
+      img.onerror = rej;
+    });
+
+    await compiler.compileImageTargets([img], (progress)=>{
+      const p = 10 + progress * 80;
+      barEl.style.width = p+'%';
+      pctEl.textContent = Math.round(p)+'%';
+      pct = p;
+    });
+
+    clearInterval(pctInt);
+    barEl.style.width = '100%';
+    pctEl.textContent = '100%';
+
+    const exportedBuffer = await compiler.exportData();
+    const blob = new Blob([exportedBuffer]);
+    const mindFileURL = URL.createObjectURL(blob);
+
+    // Prepare video blob URL
+    let videoURL;
+    if(data.videoData && data.videoData.startsWith('data:')){
+      // base64 stored in Firebase — convert to blob
+      const base64 = data.videoData.split(',')[1];
+      const mime = data.videoData.split(';')[0].split(':')[1];
+      const bytes = atob(base64);
+      const arr = new Uint8Array(bytes.length);
+      for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
+      const vblob = new Blob([arr],{type:mime});
+      videoURL = URL.createObjectURL(vblob);
+    } else {
+      videoURL = data.videoData;
+    }
+
+    // Build A-Frame scene
+    buildARScene(mindFileURL, videoURL, frameBlob, data.customerName);
 
   } catch(e){
-    showError('Connection Error','Could not load. Check your internet and try again.\n\n'+e.message);
+    showError('Error','Something went wrong: '+e.message);
+    console.error(e);
   }
 }
 
-function playVideo(){
-  const screen = document.getElementById('video-screen');
-  const vid = document.getElementById('main-video');
-  screen.classList.add('show');
-  vid.currentTime = 0;
-  vid.play().catch(err => {
-    console.log('Autoplay issue:', err);
-    // video controls will still allow manual play
-  });
-}
+function buildARScene(mindURL, videoURL, frameURL, customerName){
+  document.getElementById('compile-screen').style.display = 'none';
 
-function closeVideo(){
-  const vid = document.getElementById('main-video');
-  vid.pause();
-  document.getElementById('video-screen').classList.remove('show');
-}
+  // Create video element
+  const vid = document.createElement('video');
+  vid.id = 'ar-video';
+  vid.src = videoURL;
+  vid.loop = true;
+  vid.muted = false;
+  vid.playsInline = true;
+  vid.setAttribute('webkit-playsinline','');
+  vid.crossOrigin = 'anonymous';
+  vid.style.display = 'none';
+  document.body.appendChild(vid);
 
-function replayVideo(){
-  const vid = document.getElementById('main-video');
-  vid.currentTime = 0;
-  vid.play();
+  const container = document.getElementById('ar-container');
+  container.innerHTML = `
+    <a-scene
+      mindar-image="imageTargetSrc: ${mindURL}; autoStart: true; uiLoading: no; uiScanning: no; uiError: no"
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
+
+      <a-assets>
+        <video id="aframe-video" src="${videoURL}" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-video
+          src="#aframe-video"
+          position="0 0 0"
+          width="1"
+          height="0.5625"
+          rotation="0 0 0">
+        </a-video>
+      </a-entity>
+
+    </a-scene>
+  `;
+
+  // Show HUD
+  document.getElementById('hud-name').textContent = customerName;
+  document.getElementById('scan-hud').style.display = 'flex';
+  document.getElementById('target-frame').style.display = 'block';
+  document.getElementById('scan-tip').style.display = 'block';
+
+  // Hook into MindAR target found/lost events
+  setTimeout(()=>{
+    const scene = document.querySelector('a-scene');
+    if(!scene) return;
+
+    scene.addEventListener('arReady', ()=>{
+      console.log('AR ready');
+    });
+
+    scene.addEventListener('targetFound', ()=>{
+      // Unmute and play with real audio
+      const aVid = document.getElementById('aframe-video');
+      if(aVid){
+        aVid.muted = false;
+        aVid.play().catch(()=>{ aVid.muted=true; aVid.play(); });
+      }
+      // Show found banner
+      const banner = document.getElementById('found-banner');
+      banner.style.display = 'block';
+      setTimeout(()=>{ banner.style.display = 'none'; }, 2500);
+    });
+
+    scene.addEventListener('targetLost', ()=>{
+      const aVid = document.getElementById('aframe-video');
+      if(aVid) aVid.pause();
+    });
+  }, 2000);
 }
 
 init();
