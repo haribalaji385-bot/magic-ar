@@ -7,96 +7,144 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#000;color:#fff;font-family:'DM Sans',sans-serif;
-    height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#07070f;--surface:#10101a;--border:#22223a;
+  --accent:#7c5cfc;--accent2:#fc5c7d;--text:#f0f0f8;--muted:#6b6b82
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;position:relative}
 
-  #splash{
-    position:fixed;inset:0;background:#0a0a0f;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    z-index:1000;transition:opacity .5s
-  }
-  .brand{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
-    background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-  .tagline{font-size:0.85rem;color:#6b6b82;margin-bottom:2.5rem;letter-spacing:.05em}
-  .loader{width:40px;height:40px;border:3px solid #2a2a38;
-    border-top-color:#7c5cfc;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:1.2rem}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .load-text{font-size:0.85rem;color:#6b6b82}
+/* animated bg */
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.glow1{position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,92,252,.15),transparent 70%);
+  top:-100px;left:-100px;animation:float1 8s ease-in-out infinite}
+.glow2{position:absolute;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(252,92,125,.12),transparent 70%);
+  bottom:-80px;right:-80px;animation:float2 10s ease-in-out infinite}
+@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,30px)}}
+@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,-20px)}}
 
-  #error-screen{
-    position:fixed;inset:0;background:#0a0a0f;
-    display:none;flex-direction:column;align-items:center;justify-content:center;
-    z-index:999;padding:2rem;text-align:center
-  }
-  .err-icon{font-size:3rem;margin-bottom:1rem}
-  .err-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:8px}
-  .err-msg{font-size:0.9rem;color:#6b6b82;line-height:1.6}
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .6s,transform .6s;padding:2rem;text-align:center}
+#splash.hide{opacity:0;transform:scale(1.05);pointer-events:none}
+.logo-wrap{margin-bottom:2rem}
+.brand{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.tagline{font-size:0.8rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:6px}
+.loader-ring{width:44px;height:44px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{font-size:0.85rem;color:var(--muted)}
 
-  #ar-container{
-    position:fixed;inset:0;display:none;
-  }
-  #ar-container video{width:100%;height:100%;object-fit:cover}
+/* ERROR */
+#error-screen{position:fixed;inset:0;background:var(--bg);z-index:99;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;text-align:center}
+.err-icon{font-size:3.5rem;margin-bottom:1.2rem}
+.err-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:10px}
+.err-msg{font-size:0.9rem;color:var(--muted);line-height:1.7;max-width:300px}
 
-  #scan-hint{
-    position:fixed;bottom:0;left:0;right:0;
-    padding:1.5rem;text-align:center;
-    background:linear-gradient(transparent,rgba(0,0,0,.8));
-    z-index:50;transition:opacity .5s
-  }
-  .hint-text{font-size:0.9rem;color:rgba(255,255,255,.7);margin-bottom:4px}
-  .hint-sub{font-size:0.75rem;color:rgba(255,255,255,.4)}
-  .pulse-ring{
-    width:60px;height:60px;border:2px solid rgba(124,92,252,.6);
-    border-radius:50%;margin:0 auto 12px;
-    animation:pulse 1.5s ease-out infinite
-  }
-  @keyframes pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.5);opacity:0}}
+/* MAIN VIEW */
+#main-view{position:relative;z-index:1;width:100%;max-width:420px;padding:1.5rem;
+  display:none;flex-direction:column;align-items:center;text-align:center}
 
-  #video-overlay{
-    position:fixed;inset:0;z-index:60;
-    display:none;align-items:center;justify-content:center;
-    background:rgba(0,0,0,.15)
-  }
-  #overlay-video{
-    width:90vw;max-width:500px;border-radius:16px;
-    box-shadow:0 0 60px rgba(124,92,252,.4)
-  }
-  .video-close{
-    position:fixed;top:1rem;right:1rem;
-    width:40px;height:40px;border-radius:50%;
-    background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);
-    color:#fff;font-size:1.2rem;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;z-index:61
-  }
+.customer-greeting{margin-bottom:1.5rem}
+.greeting-hi{font-size:0.85rem;color:var(--muted);margin-bottom:4px}
+.customer-name{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700}
 
-  #found-banner{
-    position:fixed;top:1rem;left:50%;transform:translateX(-50%);
-    background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-    padding:8px 20px;border-radius:30px;font-size:0.85rem;font-weight:500;
-    z-index:55;display:none;white-space:nowrap;
-    box-shadow:0 4px 20px rgba(124,92,252,.4)
-  }
+.frame-preview{
+  width:100%;max-width:320px;border-radius:20px;
+  border:2px solid var(--border);overflow:hidden;
+  position:relative;margin-bottom:1.5rem;
+  box-shadow:0 0 40px rgba(124,92,252,.2)
+}
+.frame-preview img{width:100%;display:block;max-height:280px;object-fit:cover}
+.frame-label{
+  position:absolute;top:10px;left:10px;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  padding:4px 10px;border-radius:20px;font-size:0.72rem;color:rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,.1)
+}
 
-  .corner-brand{
-    position:fixed;top:1rem;left:1rem;z-index:55;
-    font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
-    background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    display:none
-  }
+/* PLAY BUTTON */
+.play-btn{
+  width:100%;max-width:320px;padding:18px;border:none;border-radius:18px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;
+  cursor:pointer;letter-spacing:.03em;
+  box-shadow:0 8px 30px rgba(124,92,252,.4);
+  transition:transform .15s,box-shadow .15s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:1rem
+}
+.play-btn:active{transform:scale(0.97);box-shadow:0 4px 15px rgba(124,92,252,.3)}
+.play-icon{font-size:1.3rem}
+
+.hint-row{font-size:0.78rem;color:var(--muted);display:flex;align-items:center;
+  gap:6px;justify-content:center}
+
+.order-badge{
+  margin-top:1.2rem;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:8px 16px;font-size:0.75rem;color:var(--muted)
+}
+.order-badge span{color:var(--accent);font-weight:500}
+
+/* FULLSCREEN VIDEO */
+#video-screen{
+  position:fixed;inset:0;background:#000;z-index:200;
+  display:none;flex-direction:column;align-items:center;justify-content:center
+}
+#video-screen.show{display:flex}
+#main-video{width:100%;height:100%;object-fit:contain;max-height:100vh}
+.video-top-bar{
+  position:fixed;top:0;left:0;right:0;z-index:201;
+  padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(rgba(0,0,0,.6),transparent)
+}
+.video-brand{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.close-btn{
+  width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.2);color:#fff;font-size:1rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px)
+}
+.video-bottom{
+  position:fixed;bottom:0;left:0;right:0;z-index:201;
+  padding:1.5rem;text-align:center;
+  background:linear-gradient(transparent,rgba(0,0,0,.7))
+}
+.replay-btn{
+  padding:10px 28px;border-radius:30px;border:1px solid rgba(255,255,255,.3);
+  background:rgba(255,255,255,.1);color:#fff;font-family:'DM Sans',sans-serif;
+  font-size:0.85rem;cursor:pointer;backdrop-filter:blur(8px);
+  transition:background .2s
+}
+.replay-btn:active{background:rgba(255,255,255,.2)}
 </style>
 </head>
 <body>
 
+<div class="bg-glow"><div class="glow1"></div><div class="glow2"></div></div>
+
 <!-- SPLASH -->
 <div id="splash">
-  <div class="brand">SnapAndWrap</div>
-  <div class="tagline">Magic Video Frame</div>
-  <div class="loader"></div>
+  <div class="logo-wrap">
+    <div class="brand">SnapAndWrap</div>
+    <div class="tagline">Magic Video Frame</div>
+  </div>
+  <div class="loader-ring"></div>
   <div class="load-text" id="load-text">Loading your magic frame...</div>
 </div>
 
@@ -107,28 +155,37 @@
   <div class="err-msg" id="err-msg">Please check your link and try again.</div>
 </div>
 
-<!-- AR CAMERA VIEW -->
-<div id="ar-container">
-  <video id="camera-feed" autoplay playsinline muted></video>
+<!-- MAIN VIEW -->
+<div id="main-view">
+  <div class="customer-greeting">
+    <div class="greeting-hi">✨ Your Magic Frame is ready,</div>
+    <div class="customer-name" id="cust-name-display">—</div>
+  </div>
+
+  <div class="frame-preview">
+    <img id="frame-img" src="" alt="Your Frame">
+    <div class="frame-label">📸 Your Frame</div>
+  </div>
+
+  <button class="play-btn" id="play-btn" onclick="playVideo()">
+    <span class="play-icon">▶</span> Play My Video
+  </button>
+
+  <div class="hint-row">🔊 Turn up your volume for best experience</div>
+
+  <div class="order-badge">Order ID: <span id="order-id-display">—</span></div>
 </div>
 
-<!-- CORNER BRAND -->
-<div class="corner-brand" id="corner-brand">SnapAndWrap</div>
-
-<!-- SCAN HINT -->
-<div id="scan-hint">
-  <div class="pulse-ring"></div>
-  <div class="hint-text">Point your camera at the photo frame</div>
-  <div class="hint-sub">Keep frame fully visible • Hold steady</div>
-</div>
-
-<!-- FOUND BANNER -->
-<div id="found-banner">✨ Frame detected! Playing your video...</div>
-
-<!-- VIDEO OVERLAY -->
-<div id="video-overlay">
-  <video id="overlay-video" autoplay playsinline loop controls></video>
-  <div class="video-close" onclick="closeVideo()">✕</div>
+<!-- FULLSCREEN VIDEO -->
+<div id="video-screen">
+  <div class="video-top-bar">
+    <div class="video-brand">SnapAndWrap</div>
+    <button class="close-btn" onclick="closeVideo()">✕</button>
+  </div>
+  <video id="main-video" playsinline controls></video>
+  <div class="video-bottom">
+    <button class="replay-btn" onclick="replayVideo()">↺ Replay</button>
+  </div>
 </div>
 
 <script>
@@ -138,158 +195,74 @@ const db = firebase.database();
 const params = new URLSearchParams(window.location.search);
 const orderId = params.get('order');
 
-let orderData = null;
-let cameraStream = null;
-let scanInterval = null;
-let videoPlaying = false;
-let scanCanvas = document.createElement('canvas');
-let scanCtx = scanCanvas.getContext('2d');
-let targetImage = new Image();
-let targetLoaded = false;
-
 function showError(title, msg){
   document.getElementById('splash').style.display = 'none';
-  document.getElementById('error-screen').style.display = 'flex';
+  const e = document.getElementById('error-screen');
+  e.style.display = 'flex';
   document.getElementById('err-title').textContent = title;
   document.getElementById('err-msg').textContent = msg;
 }
 
-function setLoadText(t){ document.getElementById('load-text').textContent = t; }
+function setLoad(t){ document.getElementById('load-text').textContent = t; }
 
 async function init(){
   if(!orderId){
-    showError('Invalid Link', 'No order ID found in this link. Please check the QR code you received.');
+    showError('Invalid Link','No order ID in this link. Please use the QR code sent by SnapAndWrap.');
     return;
   }
-
-  setLoadText('Finding your order...');
+  setLoad('Finding your order...');
   try {
     const snap = await db.ref('orders/' + orderId).get();
     if(!snap.exists()){
-      showError('Order Not Found', 'Order "' + orderId + '" does not exist. Please contact SnapAndWrap.');
+      showError('Order Not Found','Order "'+orderId+'" not found. Contact SnapAndWrap on WhatsApp.');
       return;
     }
-    orderData = snap.val();
-    db.ref('orders/' + orderId + '/scanCount').transaction(c => (c||0) + 1);
+    const data = snap.val();
+    db.ref('orders/'+orderId+'/scanCount').transaction(c=>(c||0)+1);
 
-    setLoadText('Loading frame data...');
-    targetImage.crossOrigin = 'anonymous';
-    targetImage.onload = () => { targetLoaded = true; };
-    targetImage.onerror = () => { targetLoaded = false; };
-    targetImage.src = orderData.frameURL;
+    document.getElementById('cust-name-display').textContent = data.customerName;
+    document.getElementById('order-id-display').textContent = data.orderId;
+    document.getElementById('frame-img').src = data.frameURL;
 
-    setLoadText('Starting camera...');
-    await startCamera();
+    const vid = document.getElementById('main-video');
+    vid.src = data.videoData;
+    vid.load();
 
-  } catch(e){
-    showError('Connection Error', 'Could not load order. Please check your internet and try again.');
-    console.error(e);
-  }
-}
-
-async function startCamera(){
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} },
-      audio:false
-    });
-    const camVideo = document.getElementById('camera-feed');
-    camVideo.srcObject = cameraStream;
-    await camVideo.play();
-
-    document.getElementById('splash').style.opacity = '0';
+    setLoad('Almost ready...');
     setTimeout(()=>{
-      document.getElementById('splash').style.display = 'none';
-      document.getElementById('ar-container').style.display = 'block';
-      document.getElementById('scan-hint').style.display = 'block';
-      document.getElementById('corner-brand').style.display = 'block';
-    }, 500);
-
-    startScanning();
+      document.getElementById('splash').classList.add('hide');
+      setTimeout(()=>{
+        document.getElementById('splash').style.display='none';
+        document.getElementById('main-view').style.display='flex';
+      },600);
+    },1200);
 
   } catch(e){
-    if(e.name === 'NotAllowedError'){
-      showError('Camera Permission Denied', 'Please allow camera access when prompted, then refresh this page.');
-    } else {
-      showError('Camera Error', 'Could not access camera. Please use Chrome or Safari and try again.');
-    }
+    showError('Connection Error','Could not load. Check your internet and try again.\n\n'+e.message);
   }
 }
 
-function startScanning(){
-  const camVideo = document.getElementById('camera-feed');
-  scanInterval = setInterval(() => {
-    if(videoPlaying || !targetLoaded) return;
-    if(camVideo.readyState < 2) return;
-
-    const w = camVideo.videoWidth, h = camVideo.videoHeight;
-    if(!w || !h) return;
-
-    scanCanvas.width = w; scanCanvas.height = h;
-    scanCtx.drawImage(camVideo, 0, 0, w, h);
-
-    const frameData = scanCtx.getImageData(0, 0, w, h);
-    const detected = checkFrameSimilarity(frameData, w, h);
-
-    if(detected){
-      triggerVideo();
-    }
-  }, 800);
-}
-
-function checkFrameSimilarity(frameData, w, h){
-  try {
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = 64; tempCanvas.height = 64;
-    const tempCtx = tempCanvas.getContext('2d');
-
-    tempCtx.drawImage(scanCanvas, 0, 0, 64, 64);
-    const camSmall = tempCtx.getImageData(0, 0, 64, 64);
-
-    const imgCanvas = document.createElement('canvas');
-    imgCanvas.width = 64; imgCanvas.height = 64;
-    const imgCtx = imgCanvas.getContext('2d');
-    imgCtx.drawImage(targetImage, 0, 0, 64, 64);
-    const imgSmall = imgCtx.getImageData(0, 0, 64, 64);
-
-    let diff = 0;
-    const total = camSmall.data.length / 4;
-    for(let i = 0; i < camSmall.data.length; i += 4){
-      diff += Math.abs(camSmall.data[i] - imgSmall.data[i]);
-      diff += Math.abs(camSmall.data[i+1] - imgSmall.data[i+1]);
-      diff += Math.abs(camSmall.data[i+2] - imgSmall.data[i+2]);
-    }
-    const avgDiff = diff / (total * 3);
-    return avgDiff < 35;
-  } catch(e){ return false; }
-}
-
-function triggerVideo(){
-  if(videoPlaying) return;
-  videoPlaying = true;
-
-  clearInterval(scanInterval);
-  document.getElementById('scan-hint').style.opacity = '0';
-
-  const banner = document.getElementById('found-banner');
-  banner.style.display = 'block';
-  setTimeout(() => { banner.style.display = 'none'; }, 2500);
-
-  const overlay = document.getElementById('video-overlay');
-  const vid = document.getElementById('overlay-video');
-
-  vid.src = orderData.videoData;
-  overlay.style.display = 'flex';
-  vid.play().catch(e => console.log('Autoplay blocked:', e));
+function playVideo(){
+  const screen = document.getElementById('video-screen');
+  const vid = document.getElementById('main-video');
+  screen.classList.add('show');
+  vid.currentTime = 0;
+  vid.play().catch(err => {
+    console.log('Autoplay issue:', err);
+    // video controls will still allow manual play
+  });
 }
 
 function closeVideo(){
-  videoPlaying = false;
-  const vid = document.getElementById('overlay-video');
-  vid.pause(); vid.src = '';
-  document.getElementById('video-overlay').style.display = 'none';
-  document.getElementById('scan-hint').style.opacity = '1';
-  startScanning();
+  const vid = document.getElementById('main-video');
+  vid.pause();
+  document.getElementById('video-screen').classList.remove('show');
+}
+
+function replayVideo(){
+  const vid = document.getElementById('main-video');
+  vid.currentTime = 0;
+  vid.play();
 }
 
 init();
