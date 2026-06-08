@@ -8,175 +8,94 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#07070f;--surface:#10101a;--border:#22223a;
-  --accent:#7c5cfc;--accent2:#fc5c7d;--text:#f0f0f8;--muted:#6b6b82
-}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'DM Sans',sans-serif}
 
-body{background:#000;font-family:'DM Sans',sans-serif;overflow:hidden;height:100vh;width:100vw}
-
-/* ── SPLASH SCREEN ── */
 #splash{
-  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  position:fixed;inset:0;background:#07070f;z-index:1000;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:2rem;text-align:center;transition:opacity .8s ease
+  text-align:center;padding:2rem;transition:opacity .5s
 }
-#splash.fade-out{opacity:0;pointer-events:none}
+#splash.hide{opacity:0;pointer-events:none}
 .brand{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
-.tagline{font-size:0.75rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2.5rem}
-.loader-ring{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);
-  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.2rem}
+  background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.tagline{font-size:0.78rem;color:#6b6b82;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2rem}
+.loader{width:42px;height:42px;border:3px solid #22223a;border-top-color:#7c5cfc;
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem}
 @keyframes spin{to{transform:rotate(360deg)}}
-#load-msg{font-size:0.9rem;color:var(--muted);line-height:1.6;max-width:280px}
+.load-text{font-size:0.85rem;color:#6b6b82}
 
-/* ── ERROR SCREEN ── */
 #error-screen{
-  position:fixed;inset:0;background:var(--bg);z-index:9998;
+  position:fixed;inset:0;background:#07070f;z-index:999;
   display:none;flex-direction:column;align-items:center;justify-content:center;
-  padding:2rem;text-align:center
+  padding:2rem;text-align:center;color:#f0f0f8
 }
-.err-icon{font-size:3.5rem;margin-bottom:1rem}
-.err-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:10px}
-.err-msg{font-size:0.85rem;color:var(--muted);line-height:1.7;max-width:300px}
+.err-icon{font-size:3rem;margin-bottom:1rem}
+.err-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:8px}
+.err-msg{font-size:0.88rem;color:#6b6b82;line-height:1.7;max-width:300px}
 
-/* ── AR COMPILING SCREEN ── */
-#compile-screen{
-  position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9990;
-  display:none;flex-direction:column;align-items:center;justify-content:center;
-  padding:2rem;text-align:center
-}
-.compile-icon{font-size:3rem;margin-bottom:1rem;animation:pulse 1.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.7}}
-.compile-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;
-  color:var(--text);margin-bottom:8px}
-.compile-sub{font-size:0.82rem;color:var(--muted);line-height:1.6;max-width:280px;margin-bottom:1.5rem}
-.compile-bar-wrap{width:220px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
-.compile-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));
-  border-radius:2px;transition:width .3s}
-.compile-pct{margin-top:8px;font-size:0.8rem;color:var(--accent);font-weight:600}
+/* MindAR container */
+#mindar-container{position:fixed;inset:0;z-index:1}
 
-/* ── SCAN INSTRUCTION HUD ── */
-#scan-hud{
-  position:fixed;top:0;left:0;right:0;z-index:500;
-  padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(rgba(0,0,0,.7),transparent);
-  display:none
-}
-.hud-brand{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hud-name{font-size:0.8rem;color:rgba(255,255,255,.7)}
-
-#scan-tip{
-  position:fixed;bottom:0;left:0;right:0;z-index:500;
-  padding:1.2rem;text-align:center;
+/* Hint overlay */
+#scan-hint{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  padding:2rem 1.5rem;text-align:center;
   background:linear-gradient(transparent,rgba(0,0,0,.75));
-  display:none
+  pointer-events:none
 }
-.scan-tip-text{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(255,255,255,.1);backdrop-filter:blur(8px);
-  border:1px solid rgba(255,255,255,.15);border-radius:30px;
-  padding:10px 20px;font-size:0.85rem;color:rgba(255,255,255,.9)
+.hint-pulse{
+  width:56px;height:56px;border:2px solid rgba(124,92,252,.7);
+  border-radius:50%;margin:0 auto 12px;
+  animation:pulse 1.6s ease-out infinite
 }
-.scan-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
-  animation:blink 1.2s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.6);opacity:0}}
+.hint-text{font-size:0.9rem;color:rgba(255,255,255,.8);font-weight:500;margin-bottom:4px}
+.hint-sub{font-size:0.75rem;color:rgba(255,255,255,.45)}
 
-/* ── CORNER FRAME TARGET UI ── */
-#target-frame{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:240px;height:240px;pointer-events:none;z-index:400;
-  display:none
+#corner-brand{
+  position:fixed;top:1rem;left:1rem;z-index:50;
+  font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
+  background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  pointer-events:none
 }
-.corner{position:absolute;width:28px;height:28px;border-color:#fff;border-style:solid;opacity:.6}
-.corner.tl{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
-.corner.tr{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
-.corner.bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
-.corner.br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
 
-/* ── VIDEO FOUND OVERLAY ── */
-#found-banner{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:800;display:none;
-  background:rgba(0,0,0,.7);backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.15);border-radius:20px;
-  padding:1.2rem 2rem;text-align:center;
-  animation:popIn .3s ease-out
+#detected-banner{
+  position:fixed;top:1rem;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+  padding:7px 20px;border-radius:30px;font-size:0.82rem;font-weight:600;
+  z-index:55;display:none;white-space:nowrap;color:#fff;
+  box-shadow:0 4px 20px rgba(124,92,252,.5)
 }
-@keyframes popIn{from{transform:translate(-50%,-50%) scale(0.8);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
-.found-text{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:#22c55e}
-.found-sub{font-size:0.75rem;color:rgba(255,255,255,.6);margin-top:4px}
-
-/* ── A-FRAME CANVAS ── */
-a-scene{position:fixed!important;top:0;left:0;width:100vw!important;height:100vh!important;z-index:1}
 </style>
 </head>
 <body>
 
-<!-- SPLASH -->
 <div id="splash">
   <div class="brand">SnapAndWrap</div>
   <div class="tagline">Magic Video Frame</div>
-  <div class="loader-ring"></div>
-  <div id="load-msg">Loading your magic frame...</div>
+  <div class="loader"></div>
+  <div class="load-text" id="load-text">Loading your magic...</div>
 </div>
 
-<!-- ERROR -->
 <div id="error-screen">
   <div class="err-icon">😕</div>
   <div class="err-title" id="err-title">Something went wrong</div>
-  <div class="err-msg" id="err-msg">Please use the QR code sent by SnapAndWrap.</div>
+  <div class="err-msg" id="err-msg">Please try again.</div>
 </div>
 
-<!-- COMPILING AR -->
-<div id="compile-screen">
-  <div class="compile-icon">🔮</div>
-  <div class="compile-title">Building Your AR Magic</div>
-  <div class="compile-sub">Preparing your frame for detection.<br>This takes about 20 seconds, only once!</div>
-  <div class="compile-bar-wrap">
-    <div class="compile-bar" id="compile-bar"></div>
-  </div>
-  <div class="compile-pct" id="compile-pct">0%</div>
+<div id="mindar-container"></div>
+<div id="corner-brand" style="display:none">SnapAndWrap</div>
+<div id="detected-banner">✨ Magic Frame detected!</div>
+<div id="scan-hint" style="display:none">
+  <div class="hint-pulse"></div>
+  <div class="hint-text">Point camera at your photo frame</div>
+  <div class="hint-sub">Keep the frame fully in view • Hold steady</div>
 </div>
-
-<!-- HUD (shown during scanning) -->
-<div id="scan-hud">
-  <div class="hud-brand">SnapAndWrap</div>
-  <div class="hud-name" id="hud-name"></div>
-</div>
-
-<!-- TARGET CORNERS -->
-<div id="target-frame">
-  <div class="corner tl"></div>
-  <div class="corner tr"></div>
-  <div class="corner bl"></div>
-  <div class="corner br"></div>
-</div>
-
-<!-- SCAN TIP -->
-<div id="scan-tip">
-  <div class="scan-tip-text">
-    <div class="scan-dot"></div>
-    Point camera at your Magic Frame photo
-  </div>
-</div>
-
-<!-- FOUND BANNER -->
-<div id="found-banner">
-  <div class="found-text">✨ Magic Frame Detected!</div>
-  <div class="found-sub">Playing your video...</div>
-</div>
-
-<!-- A-FRAME AR SCENE (built dynamically) -->
-<div id="ar-container"></div>
 
 <script>
 firebase.initializeApp(firebaseConfig);
@@ -184,7 +103,9 @@ const db = firebase.database();
 
 const params = new URLSearchParams(window.location.search);
 const orderId = params.get('order');
+let mindARInstance = null;
 
+function setLoad(t){ document.getElementById('load-text').textContent = t; }
 function showError(title, msg){
   document.getElementById('splash').style.display = 'none';
   const e = document.getElementById('error-screen');
@@ -193,183 +114,122 @@ function showError(title, msg){
   document.getElementById('err-msg').textContent = msg;
 }
 
-function setMsg(t){ document.getElementById('load-msg').textContent = t; }
-
-// Converts an image URL (possibly cross-origin) to a blob URL via canvas
-async function fetchImageAsBlob(url){
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return URL.createObjectURL(blob);
-}
-
 async function init(){
   if(!orderId){
-    showError('Invalid Link','No order ID found. Please scan the QR code sent by SnapAndWrap.');
+    showError('Invalid Link','No order ID found. Please use the QR code from SnapAndWrap.');
     return;
   }
-  setMsg('Finding your order...');
-  try{
-    const snap = await db.ref('orders/'+orderId).get();
+  setLoad('Finding your order...');
+  try {
+    const snap = await db.ref('orders/' + orderId).get();
     if(!snap.exists()){
-      showError('Order Not Found','Order "'+orderId+'" not found. Please contact SnapAndWrap on WhatsApp.');
+      showError('Order Not Found','Order "'+orderId+'" not found. Contact SnapAndWrap on WhatsApp.');
       return;
     }
     const data = snap.val();
     db.ref('orders/'+orderId+'/scanCount').transaction(c=>(c||0)+1);
 
-    setMsg('Preparing your frame image...');
-
-    // Fetch frame image as local blob (needed for MindAR compiler)
-    let frameBlob;
-    try{
-      frameBlob = await fetchImageAsBlob(data.frameURL);
-    } catch(e){
-      showError('Image Load Error','Could not load your frame image. Please try again or contact SnapAndWrap.');
+    if(!data.mindFileData){
+      showError('AR Not Ready','The .mind tracking file for this order is not set up yet. Please contact SnapAndWrap.');
       return;
     }
 
-    setMsg('Building AR magic... (this takes ~20 sec)');
-
-    // Show compile screen
-    document.getElementById('splash').style.display = 'none';
-    document.getElementById('compile-screen').style.display = 'flex';
-
-    // Animate progress bar during compilation
-    let pct = 0;
-    const pctEl = document.getElementById('compile-pct');
-    const barEl = document.getElementById('compile-bar');
-    const pctInt = setInterval(()=>{
-      if(pct < 90){ pct += (90-pct)*0.04 + 0.3; }
-      barEl.style.width = Math.min(pct,90)+'%';
-      pctEl.textContent = Math.round(Math.min(pct,90))+'%';
-    }, 300);
-
-    // Compile the image target using MindAR's compiler
-    const compiler = new MINDAR.IMAGE.Compiler();
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = frameBlob;
-
-    await new Promise((res, rej)=>{
-      img.onload = res;
-      img.onerror = rej;
-    });
-
-    await compiler.compileImageTargets([img], (progress)=>{
-      const p = 10 + progress * 80;
-      barEl.style.width = p+'%';
-      pctEl.textContent = Math.round(p)+'%';
-      pct = p;
-    });
-
-    clearInterval(pctInt);
-    barEl.style.width = '100%';
-    pctEl.textContent = '100%';
-
-    const exportedBuffer = await compiler.exportData();
-    const blob = new Blob([exportedBuffer]);
-    const mindFileURL = URL.createObjectURL(blob);
-
-    // Prepare video blob URL
-    let videoURL;
-    if(data.videoData && data.videoData.startsWith('data:')){
-      // base64 stored in Firebase — convert to blob
-      const base64 = data.videoData.split(',')[1];
-      const mime = data.videoData.split(';')[0].split(':')[1];
-      const bytes = atob(base64);
-      const arr = new Uint8Array(bytes.length);
-      for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
-      const vblob = new Blob([arr],{type:mime});
-      videoURL = URL.createObjectURL(vblob);
-    } else {
-      videoURL = data.videoData;
-    }
-
-    // Build A-Frame scene
-    buildARScene(mindFileURL, videoURL, frameBlob, data.customerName);
+    setLoad('Loading AR tracker...');
+    await startMindAR(data.mindFileData, data.videoData);
 
   } catch(e){
-    showError('Error','Something went wrong: '+e.message);
+    showError('Error', e.message);
     console.error(e);
   }
 }
 
-function buildARScene(mindURL, videoURL, frameURL, customerName){
-  document.getElementById('compile-screen').style.display = 'none';
+async function startMindAR(mindFileBase64, videoBase64){
+  setLoad('Starting camera...');
 
-  // Create video element
-  const vid = document.createElement('video');
-  vid.id = 'ar-video';
-  vid.src = videoURL;
-  vid.loop = true;
-  vid.muted = false;
-  vid.playsInline = true;
-  vid.setAttribute('webkit-playsinline','');
-  vid.crossOrigin = 'anonymous';
-  vid.style.display = 'none';
-  document.body.appendChild(vid);
+  // Convert base64 .mind file to blob URL
+  const mindBlob = base64ToBlob(mindFileBase64, 'application/octet-stream');
+  const mindURL = URL.createObjectURL(mindBlob);
 
-  const container = document.getElementById('ar-container');
+  // Convert video base64 to blob URL
+  const videoBlob = base64ToBlob(videoBase64, 'video/mp4');
+  const videoURL = URL.createObjectURL(videoBlob);
+
+  // Build MindAR scene dynamically
+  const container = document.getElementById('mindar-container');
   container.innerHTML = `
     <a-scene
-      mindar-image="imageTargetSrc: ${mindURL}; autoStart: true; uiLoading: no; uiScanning: no; uiError: no"
+      id="ar-scene"
+      mindar-image="imageTargetSrc: ${mindURL}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false">
-
+      device-orientation-permission-ui="enabled: false"
+      style="position:fixed;inset:0;z-index:1"
+    >
       <a-assets>
-        <video id="aframe-video" src="${videoURL}" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+        <video id="ar-video" src="${videoURL}" preload="auto" loop crossorigin playsinline webkit-playsinline muted></video>
       </a-assets>
-
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
+      <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-video
-          src="#aframe-video"
+        <a-plane
+          src="#ar-video"
           position="0 0 0"
+          height="0.552"
           width="1"
-          height="0.5625"
-          rotation="0 0 0">
-        </a-video>
+          rotation="0 0 0"
+          material="shader: flat; src: #ar-video"
+        ></a-plane>
       </a-entity>
-
     </a-scene>
   `;
 
-  // Show HUD
-  document.getElementById('hud-name').textContent = customerName;
-  document.getElementById('scan-hud').style.display = 'flex';
-  document.getElementById('target-frame').style.display = 'block';
-  document.getElementById('scan-tip').style.display = 'block';
+  // Load A-Frame after setting up scene
+  const aframeScript = document.createElement('script');
+  aframeScript.src = 'https://aframe.io/releases/1.4.0/aframe.min.js';
+  document.head.appendChild(aframeScript);
 
-  // Hook into MindAR target found/lost events
-  setTimeout(()=>{
-    const scene = document.querySelector('a-scene');
-    if(!scene) return;
+  aframeScript.onload = () => {
+    const mindScript = document.createElement('script');
+    mindScript.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js';
+    document.head.appendChild(mindScript);
 
-    scene.addEventListener('arReady', ()=>{
-      console.log('AR ready');
-    });
+    mindScript.onload = () => {
+      setLoad('Almost ready...');
+      setTimeout(() => {
+        document.getElementById('splash').classList.add('hide');
+        setTimeout(() => {
+          document.getElementById('splash').style.display = 'none';
+          document.getElementById('scan-hint').style.display = 'block';
+          document.getElementById('corner-brand').style.display = 'block';
+        }, 500);
 
-    scene.addEventListener('targetFound', ()=>{
-      // Unmute and play with real audio
-      const aVid = document.getElementById('aframe-video');
-      if(aVid){
-        aVid.muted = false;
-        aVid.play().catch(()=>{ aVid.muted=true; aVid.play(); });
-      }
-      // Show found banner
-      const banner = document.getElementById('found-banner');
-      banner.style.display = 'block';
-      setTimeout(()=>{ banner.style.display = 'none'; }, 2500);
-    });
+        // Watch for target found/lost
+        const scene = document.getElementById('ar-scene');
+        scene.addEventListener('targetFound', () => {
+          document.getElementById('scan-hint').style.opacity = '0';
+          const banner = document.getElementById('detected-banner');
+          banner.style.display = 'block';
+          setTimeout(() => { banner.style.display = 'none'; }, 2000);
+          const vid = document.getElementById('ar-video');
+          if(vid){ vid.muted = false; vid.play(); }
+        });
+        scene.addEventListener('targetLost', () => {
+          document.getElementById('scan-hint').style.opacity = '1';
+          const vid = document.getElementById('ar-video');
+          if(vid) vid.pause();
+        });
+      }, 1000);
+    };
+  };
+}
 
-    scene.addEventListener('targetLost', ()=>{
-      const aVid = document.getElementById('aframe-video');
-      if(aVid) aVid.pause();
-    });
-  }, 2000);
+function base64ToBlob(base64, mimeType){
+  const parts = base64.split(';base64,');
+  const raw = parts.length > 1 ? parts[1] : parts[0];
+  const binary = atob(raw);
+  const bytes = new Uint8Array(binary.length);
+  for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], {type: mimeType});
 }
 
 init();
