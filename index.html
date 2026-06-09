@@ -171,7 +171,7 @@ async function init() {
     const mindBlob = b64toBlob(data.mindFileData, 'application/octet-stream');
     const mindURL = URL.createObjectURL(mindBlob);
 
-    // Use Google Drive direct stream URL
+    // Get video URL
     const vidURL = data.videoURL;
     if (!vidURL) {
       showError('Video Missing', 'No video found for this order. Please contact SnapAndWrap.');
@@ -197,6 +197,8 @@ function b64toBlob(base64, mime) {
 }
 
 function buildARScene(mindURL, videoURL, customerName) {
+  const finalVideoURL = videoURL;
+
   // Inject A-Frame scene into body
   const sceneHTML = `
     <a-scene
@@ -210,13 +212,12 @@ function buildARScene(mindURL, videoURL, customerName) {
       <a-assets>
         <video
           id="ar-video"
-          src="${videoURL}"
+          src="${finalVideoURL}"
           preload="auto"
           loop="true"
-          crossorigin="anonymous"
           playsinline
           webkit-playsinline
-          muted="false"
+          muted="true"
         ></video>
       </a-assets>
 
@@ -289,8 +290,7 @@ function buildARScene(mindURL, videoURL, customerName) {
 
     const vid = document.getElementById('ar-video');
     if (vid) {
-      vid.muted = false;
-      vid.play().catch(() => { vid.muted = true; vid.play(); });
+      vid.play().catch(e => console.log('Play error:', e));
     }
   });
 
