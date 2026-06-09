@@ -26,45 +26,33 @@ header{padding:1.2rem 2rem;border-bottom:1px solid var(--border);
 .stats{display:flex;gap:1.5rem}
 .stat-num{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;color:var(--accent);text-align:right}
 .stat-label{font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-
 .container{max-width:1100px;margin:0 auto;padding:2rem}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
 @media(max-width:720px){.grid{grid-template-columns:1fr}}
-
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem}
 .card-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.2rem;
   display:flex;align-items:center;gap:8px}
 .card-title::before{content:'';width:4px;height:18px;
   background:linear-gradient(var(--accent),var(--accent2));border-radius:2px}
-
-/* HOW TO GUIDE */
 .how-to{background:var(--surface2);border:1px solid var(--border);
   border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.5rem}
 .how-to-title{font-size:0.82rem;font-weight:600;color:var(--accent);margin-bottom:10px}
 .how-steps{display:flex;flex-direction:column;gap:8px}
 .how-step{display:flex;align-items:flex-start;gap:10px;font-size:0.8rem;color:var(--muted);line-height:1.5}
-.step-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+.step-num{width:22px;height:22px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#fff;font-size:0.68rem;font-weight:700;flex-shrink:0;
   display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
 .how-link{color:var(--accent);text-decoration:none;font-weight:600}
 .how-link:hover{text-decoration:underline}
-
-/* Drive instruction box */
-.drive-guide{background:#0d1f0d;border:1px solid #1a3a1a;border-radius:10px;
-  padding:10px 14px;margin-bottom:1rem;font-size:0.78rem;color:#86efac;line-height:1.7}
-.drive-guide b{color:#4ade80}
-
 label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:5px;
   text-transform:uppercase;letter-spacing:.04em}
-input[type=text],input[type=tel],input[type=url]{
+input[type=text],input[type=tel]{
   width:100%;padding:10px 14px;background:var(--surface2);
   border:1px solid var(--border);border-radius:10px;color:var(--text);
   font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;
   transition:border-color .2s;margin-bottom:1rem}
 input:focus{border-color:var(--accent)}
-input.valid{border-color:var(--success)}
-input.invalid{border-color:#f87171}
-
 .upload-box{border:2px dashed var(--border);border-radius:12px;padding:1.2rem;
   text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1rem;
   background:var(--surface2);position:relative;overflow:hidden}
@@ -75,25 +63,21 @@ input.invalid{border-color:#f87171}
 .upload-sub{font-size:0.72rem;color:var(--muted);margin-top:3px;opacity:.7}
 .upload-name{font-size:0.78rem;color:var(--accent);margin-top:5px;font-weight:500;min-height:18px}
 .upload-box.has-file{border-color:var(--accent);border-style:solid}
-
 .progress-wrap{display:none;margin-bottom:1rem}
 .progress-label{font-size:0.75rem;color:var(--muted);margin-bottom:6px}
 .progress-bg{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
   width:0%;transition:width .4s;border-radius:3px}
-
 .btn{width:100%;padding:13px;border:none;border-radius:12px;
   font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all .2s}
 .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
   box-shadow:0 4px 20px rgba(124,92,252,.3)}
 .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
 .btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
-
 .status{padding:10px 14px;border-radius:10px;font-size:0.85rem;margin-top:10px;display:none}
 .status.success{background:#052e16;color:var(--success);border:1px solid #166534}
 .status.error{background:#2d0a0a;color:#f87171;border:1px solid #7f1d1d}
 .status.loading{background:#1a1228;color:var(--accent);border:1px solid #3b1f6e}
-
 .orders-table{width:100%;border-collapse:collapse;font-size:0.83rem}
 .orders-table th{padding:9px 12px;text-align:left;color:var(--muted);
   font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;
@@ -108,7 +92,6 @@ input.invalid{border-color:#f87171}
 .del-btn{padding:4px 9px;border-radius:8px;border:1px solid #7f1d1d;
   background:transparent;color:#f87171;font-size:0.72rem;cursor:pointer;
   font-family:'DM Sans',sans-serif;margin-left:4px}
-
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
   z-index:100;align-items:center;justify-content:center}
 .modal.open{display:flex}
@@ -134,29 +117,29 @@ input.invalid{border-color:#f87171}
     <div><div class="stat-num" id="total-scans">0</div><div class="stat-label">Scans</div></div>
   </div>
 </header>
-
 <div class="container">
-
-  <!-- HOW TO GUIDE -->
   <div class="how-to">
     <div class="how-to-title">📋 How to add each new order</div>
     <div class="how-steps">
-      <div class="how-step"><span class="step-num">1</span>Go to <a class="how-link" href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">MindAR Compiler ↗</a> → upload frame photo → download .mind file</div>
-      <div class="how-step"><span class="step-num">2</span>Upload customer video to <a class="how-link" href="https://drive.google.com/drive/folders/1nT_6lcuM01mxDVzkQtlDNBP0PB_OfiB-" target="_blank">SnapAndWrap Google Drive ↗</a> → right click file → Share → Anyone with link → copy link</div>
-      <div class="how-step"><span class="step-num">3</span>Fill the form below → paste Google Drive link → click Add Order → send QR to customer on WhatsApp</div>
+      <div class="how-step"><span class="step-num">1</span>
+        Go to <a class="how-link" href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">MindAR Compiler ↗</a> → upload frame photo → download .mind file
+      </div>
+      <div class="how-step"><span class="step-num">2</span>
+        Fill form below → upload frame photo + .mind file + video → click Add Order
+      </div>
+      <div class="how-step"><span class="step-num">3</span>
+        QR code generated → screenshot → send to customer via WhatsApp
+      </div>
     </div>
   </div>
 
   <div class="grid">
     <div class="card">
       <div class="card-title">Add New Order</div>
-
       <label>Customer Name</label>
       <input type="text" id="cust-name" placeholder="e.g. Priya Sharma">
-
       <label>Phone Number</label>
       <input type="tel" id="cust-phone" placeholder="e.g. 9876543210">
-
       <label>Order ID</label>
       <input type="text" id="order-id" readonly style="color:var(--muted)">
 
@@ -178,16 +161,14 @@ input.invalid{border-color:#f87171}
         <div class="upload-name" id="mind-name"></div>
       </div>
 
-      <label>Google Drive Video Link</label>
-      <div class="drive-guide">
-        <b>How to get the link:</b><br>
-        1. Upload video to Google Drive folder<br>
-        2. Right click the video → <b>Share</b><br>
-        3. Change to <b>"Anyone with the link"</b><br>
-        4. Click <b>Copy link</b> → paste below
+      <label>Customer Video (MP4, any size)</label>
+      <div class="upload-box" id="video-box">
+        <input type="file" id="video-file" accept="video/mp4,video/webm,video/*" onchange="handleFile(this,'video')">
+        <div class="upload-icon">🎬</div>
+        <div class="upload-label">Upload video (MP4 recommended)</div>
+        <div class="upload-sub">Uploaded to Cloudinary — free, fast, no size limit</div>
+        <div class="upload-name" id="video-name"></div>
       </div>
-      <input type="url" id="video-url" placeholder="https://drive.google.com/file/d/..." oninput="validateDriveLink(this)">
-      <div id="drive-link-status" style="font-size:0.75rem;margin-top:-10px;margin-bottom:12px;display:none"></div>
 
       <div class="progress-wrap" id="progress-wrap">
         <div class="progress-label" id="progress-label">Uploading...</div>
@@ -202,21 +183,18 @@ input.invalid{border-color:#f87171}
 
     <div class="card" style="overflow:auto">
       <div class="card-title">All Orders</div>
-      <div id="orders-container"><div class="empty">No orders yet. Add your first order!</div></div>
+      <div id="orders-container"><div class="empty">No orders yet.</div></div>
     </div>
   </div>
 </div>
 
-<!-- QR Modal -->
 <div class="modal" id="qr-modal">
   <div class="modal-box">
     <div class="modal-title" id="modal-name">Customer</div>
     <div class="modal-sub" id="modal-oid">Order ID</div>
     <div id="qr-canvas"></div>
     <div class="copy-link" id="modal-link" onclick="copyLink()">Click to copy link</div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">
-      📱 Screenshot QR → send via WhatsApp to customer
-    </div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">📱 Screenshot QR → send via WhatsApp</div>
     <button class="modal-close" onclick="document.getElementById('qr-modal').classList.remove('open')">Close</button>
   </div>
 </div>
@@ -225,7 +203,11 @@ input.invalid{border-color:#f87171}
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let files = { frame: null, mind: null };
+// Cloudinary config — free account, no CORS issues, unlimited video hosting
+const CLOUDINARY_CLOUD = 'snapandwrap';
+const CLOUDINARY_PRESET = 'snapandwrap_videos';
+
+let files = { frame: null, mind: null, video: null };
 let currentLink = '';
 
 function genOrderId(){
@@ -247,43 +229,11 @@ function handleFile(input, type){
   document.getElementById(type+'-box').classList.add('has-file');
 }
 
-// Convert Google Drive share link to direct stream link
-function convertDriveLink(url){
-  // Format 1: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
-  // Format 2: https://drive.google.com/open?id=FILE_ID
-  let fileId = null;
-  const match1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if(match1) fileId = match1[1];
-  else if(match2) fileId = match2[1];
-  if(!fileId) return null;
-  // Direct stream URL — works for video playback
-  return 'https://drive.google.com/uc?export=download&id=' + fileId;
-}
-
-function validateDriveLink(input){
-  const val = input.value.trim();
-  const statusEl = document.getElementById('drive-link-status');
-  if(!val){ statusEl.style.display='none'; input.className=''; return; }
-  const converted = convertDriveLink(val);
-  if(converted){
-    input.classList.add('valid'); input.classList.remove('invalid');
-    statusEl.style.display = 'block';
-    statusEl.style.color = '#22c55e';
-    statusEl.textContent = '✓ Valid Google Drive link detected';
-  } else {
-    input.classList.add('invalid'); input.classList.remove('valid');
-    statusEl.style.display = 'block';
-    statusEl.style.color = '#f87171';
-    statusEl.textContent = '✗ Invalid link. Make sure you copy the sharing link from Google Drive';
-  }
-}
-
 function showStatus(m,t){
   const e = document.getElementById('status-msg');
   e.textContent=m; e.className='status '+t; e.style.display='block';
 }
-function setProgress(pct,label){
+function setProgress(pct, label){
   document.getElementById('progress-wrap').style.display='block';
   document.getElementById('progress-fill').style.width=pct+'%';
   document.getElementById('progress-label').textContent=label;
@@ -304,34 +254,72 @@ async function uploadToImgBB(file){
   return d.data.url;
 }
 
+async function uploadVideoToCloudinary(file){
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  fd.append('resource_type', 'video');
+
+  // Use XMLHttpRequest to track upload progress
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`);
+
+    xhr.upload.onprogress = (e) => {
+      if(e.lengthComputable){
+        const pct = Math.round((e.loaded / e.total) * 50) + 30; // 30-80%
+        setProgress(pct, `Uploading video... ${Math.round(e.loaded/e.total*100)}%`);
+      }
+    };
+
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if(data.secure_url){
+          resolve(data.secure_url);
+        } else {
+          reject(new Error('Cloudinary upload failed: ' + JSON.stringify(data)));
+        }
+      } catch(e){ reject(e); }
+    };
+
+    xhr.onerror = () => reject(new Error('Video upload network error'));
+    xhr.send(fd);
+  });
+}
+
 async function submitOrder(){
   const name = document.getElementById('cust-name').value.trim();
   const phone = document.getElementById('cust-phone').value.trim();
   const orderId = document.getElementById('order-id').value.trim();
-  const videoURL = document.getElementById('video-url').value.trim();
 
   if(!name){ showStatus('Please enter customer name','error'); return; }
   if(!phone){ showStatus('Please enter phone number','error'); return; }
   if(!files.frame){ showStatus('Please upload frame photo','error'); return; }
   if(!files.mind){ showStatus('Please upload .mind file','error'); return; }
-  if(!videoURL){ showStatus('Please paste Google Drive video link','error'); return; }
-
-  const directVideoURL = convertDriveLink(videoURL);
-  if(!directVideoURL){ showStatus('Invalid Google Drive link. Please copy the correct sharing link.','error'); return; }
+  if(!files.video){ showStatus('Please upload customer video','error'); return; }
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
 
   try {
-    setProgress(15, 'Uploading frame preview to ImgBB...');
+    // 1. Upload frame to ImgBB
+    setProgress(10, 'Uploading frame preview...');
     showStatus('Uploading frame image...','loading');
     const frameURL = await uploadToImgBB(files.frame);
 
-    setProgress(45, 'Reading .mind file...');
+    // 2. Read .mind file
+    setProgress(25, 'Reading .mind file...');
     showStatus('Processing .mind file...','loading');
     const mindFileData = await toBase64(files.mind);
 
-    setProgress(80, 'Saving order to database...');
+    // 3. Upload video to Cloudinary
+    setProgress(30, 'Uploading video to Cloudinary...');
+    showStatus('Uploading video — this may take a minute...','loading');
+    const videoURL = await uploadVideoToCloudinary(files.video);
+
+    // 4. Save to Firebase
+    setProgress(85, 'Saving order...');
     showStatus('Saving order...','loading');
     await db.ref('orders/' + orderId).set({
       customerName: name,
@@ -339,8 +327,7 @@ async function submitOrder(){
       orderId: orderId,
       frameURL: frameURL,
       mindFileData: mindFileData,
-      videoURL: directVideoURL,        // Google Drive direct stream link
-      videoShareURL: videoURL,         // Original share link (for reference)
+      videoURL: videoURL,
       scanCount: 0,
       orderDate: new Date().toISOString(),
       status: 'active'
@@ -354,12 +341,10 @@ async function submitOrder(){
       'index.html?order=' + orderId;
     showQR(name, orderId, arLink);
 
-    // Reset
+    // Reset form
     document.getElementById('cust-name').value='';
     document.getElementById('cust-phone').value='';
-    document.getElementById('video-url').value='';
-    document.getElementById('drive-link-status').style.display='none';
-    ['frame','mind'].forEach(t=>{
+    ['frame','mind','video'].forEach(t=>{
       document.getElementById(t+'-name').textContent='';
       document.getElementById(t+'-file').value='';
       document.getElementById(t+'-box').classList.remove('has-file');
@@ -410,13 +395,12 @@ function loadOrders(){
     let html='<table class="orders-table"><thead><tr><th>Customer</th><th>Order</th><th>Scans</th><th>Video</th><th>Actions</th></tr></thead><tbody>';
     orders.forEach(o=>{
       const link=base+'?order='+o.orderId;
-      const vidOk = o.videoURL ? '✅' : '❌';
       html+=`<tr>
         <td><div style="font-weight:500">${o.customerName}</div>
             <div style="font-size:0.72rem;color:var(--muted)">${o.phone}</div></td>
         <td style="font-size:0.75rem;color:var(--muted);font-family:monospace">${o.orderId}</td>
         <td>👁 ${o.scanCount||0}</td>
-        <td>${vidOk} Drive</td>
+        <td>${o.videoURL?'✅ Ready':'❌ Missing'}</td>
         <td>
           <button class="qr-btn" onclick="showQR('${o.customerName}','${o.orderId}','${link}')">QR</button>
           <button class="del-btn" onclick="if(confirm('Delete order ${o.orderId}?'))db.ref('orders/${o.orderId}').remove()">Del</button>
