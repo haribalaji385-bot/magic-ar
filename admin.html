@@ -203,7 +203,9 @@ input:focus{border-color:var(--accent)}
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Cloudinary config loaded from firebase-config.js
+// Cloudinary config
+const CLOUDINARY_CLOUD = 'dwljsxzte';
+const CLOUDINARY_PRESET = 'snapandwrap_videos';
 
 let files = { frame: null, mind: null, video: null };
 let currentLink = '';
