@@ -203,9 +203,7 @@ input:focus{border-color:var(--accent)}
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Cloudinary config — free account, no CORS issues, unlimited video hosting
-const CLOUDINARY_CLOUD = 'snapandwrap';
-const CLOUDINARY_PRESET = 'snapandwrap_videos';
+// Cloudinary config loaded from firebase-config.js
 
 let files = { frame: null, mind: null, video: null };
 let currentLink = '';
@@ -258,12 +256,11 @@ async function uploadVideoToCloudinary(file){
   const fd = new FormData();
   fd.append('file', file);
   fd.append('upload_preset', CLOUDINARY_PRESET);
-  fd.append('resource_type', 'video');
 
   // Use XMLHttpRequest to track upload progress
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`);
+    xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/video/upload');
 
     xhr.upload.onprogress = (e) => {
       if(e.lengthComputable){
