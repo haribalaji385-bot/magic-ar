@@ -11,92 +11,71 @@
   <script src="firebase-config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; overflow: hidden; font-family: 'DM Sans', sans-serif; }
-
-    a-scene {
-      position: fixed !important;
-      top: 0; left: 0;
-      width: 100% !important;
-      height: 100% !important;
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#000;overflow:hidden;font-family:'DM Sans',sans-serif}
+    a-scene{position:fixed!important;top:0;left:0;width:100%!important;height:100%!important}
+    /* Hidden canvas used as video texture source */
+    #cover-canvas{display:none}
+    #loading{
+      position:fixed;inset:0;z-index:9999;background:#07070f;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;padding:2rem;transition:opacity .5s
     }
-
-    #loading {
-      position: fixed; inset: 0; z-index: 9999;
-      background: #07070f;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center; padding: 2rem;
-      transition: opacity .5s;
+    #loading.hide{opacity:0;pointer-events:none}
+    .brand{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
+      background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+    .tag{font-size:0.78rem;color:#6b6b82;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2rem}
+    .spin{width:44px;height:44px;border:3px solid #22223a;border-top-color:#7c5cfc;
+      border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 1rem}
+    @keyframes sp{to{transform:rotate(360deg)}}
+    #load-txt{font-size:0.85rem;color:#6b6b82}
+    #err{position:fixed;inset:0;z-index:9998;background:#07070f;
+      display:none;flex-direction:column;align-items:center;justify-content:center;
+      padding:2rem;text-align:center;color:#f0f0f8}
+    #err.show{display:flex}
+    #err-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:8px}
+    #err-msg{font-size:0.88rem;color:#6b6b82;line-height:1.7;max-width:300px}
+    #unmute-btn{
+      position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);
+      z-index:200;display:none;
+      padding:12px 28px;border-radius:30px;
+      background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+      border:none;color:#fff;font-family:'Syne',sans-serif;
+      font-size:0.9rem;font-weight:700;cursor:pointer;
+      box-shadow:0 4px 20px rgba(124,92,252,.5)
     }
-    #loading.hide { opacity: 0; pointer-events: none; }
-    .brand {
-      font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
-      background: linear-gradient(135deg, #7c5cfc, #fc5c7d);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      margin-bottom: 6px;
+    #brand-corner{
+      position:fixed;top:1rem;left:1rem;z-index:100;
+      font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
+      background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      display:none;pointer-events:none
     }
-    .tag { font-size: 0.78rem; color: #6b6b82; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2rem; }
-    .spin {
-      width: 44px; height: 44px; border: 3px solid #22223a;
-      border-top-color: #7c5cfc; border-radius: 50%;
-      animation: sp .7s linear infinite; margin: 0 auto 1rem;
+    #hint{
+      position:fixed;bottom:0;left:0;right:0;z-index:100;
+      padding:2rem 1.5rem;text-align:center;
+      background:linear-gradient(transparent,rgba(0,0,0,.8));
+      display:none;pointer-events:none
     }
-    @keyframes sp { to { transform: rotate(360deg); } }
-    #load-txt { font-size: 0.85rem; color: #6b6b82; }
-
-    #err {
-      position: fixed; inset: 0; z-index: 9998; background: #07070f;
-      display: none; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 2rem; text-align: center; color: #f0f0f8;
-    }
-    #err.show { display: flex; }
-    #err-title { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
-    #err-msg { font-size: 0.88rem; color: #6b6b82; line-height: 1.7; max-width: 300px; }
-
-    /* Unmute button - shown on target found since autoplay requires muted */
-    #unmute-btn {
-      position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%);
-      z-index: 200; display: none;
-      padding: 10px 24px; border-radius: 30px;
-      background: linear-gradient(135deg, #7c5cfc, #fc5c7d);
-      border: none; color: #fff; font-family: 'Syne', sans-serif;
-      font-size: 0.9rem; font-weight: 700; cursor: pointer;
-      box-shadow: 0 4px 20px rgba(124,92,252,.5);
-    }
-
-    #brand-corner {
-      position: fixed; top: 1rem; left: 1rem; z-index: 100;
-      font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700;
-      background: linear-gradient(135deg, #7c5cfc, #fc5c7d);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      display: none; pointer-events: none;
-    }
-    #hint {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      padding: 2rem 1.5rem; text-align: center;
-      background: linear-gradient(transparent, rgba(0,0,0,.8));
-      display: none; pointer-events: none;
-    }
-    .pulse {
-      width: 54px; height: 54px; border: 2px solid rgba(124,92,252,.7);
-      border-radius: 50%; margin: 0 auto 12px;
-      animation: pulse 1.6s ease-out infinite;
-    }
-    @keyframes pulse { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.7);opacity:0} }
-    .h1 { font-size: 0.9rem; color: rgba(255,255,255,.85); font-weight: 500; margin-bottom: 4px; }
-    .h2 { font-size: 0.75rem; color: rgba(255,255,255,.45); }
-    #banner {
-      position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
-      background: linear-gradient(135deg, #7c5cfc, #fc5c7d);
-      padding: 8px 22px; border-radius: 30px; font-size: 0.82rem;
-      font-weight: 600; z-index: 100; display: none; color: #fff;
-      white-space: nowrap; box-shadow: 0 4px 24px rgba(124,92,252,.5);
+    .pulse{width:54px;height:54px;border:2px solid rgba(124,92,252,.7);
+      border-radius:50%;margin:0 auto 12px;animation:pulse 1.6s ease-out infinite}
+    @keyframes pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.7);opacity:0}}
+    .h1{font-size:0.9rem;color:rgba(255,255,255,.85);font-weight:500;margin-bottom:4px}
+    .h2{font-size:0.75rem;color:rgba(255,255,255,.45)}
+    #banner{
+      position:fixed;top:1rem;left:50%;transform:translateX(-50%);
+      background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+      padding:8px 22px;border-radius:30px;font-size:0.82rem;
+      font-weight:600;z-index:100;display:none;color:#fff;
+      white-space:nowrap;box-shadow:0 4px 24px rgba(124,92,252,.5)
     }
   </style>
 </head>
 <body>
+
+<!-- Hidden canvas — renders object-fit:cover video frames as texture -->
+<canvas id="cover-canvas" width="512" height="512"></canvas>
 
 <div id="loading">
   <div class="brand">SnapAndWrap</div>
@@ -104,7 +83,6 @@
   <div class="spin"></div>
   <div id="load-txt">Loading your magic frame...</div>
 </div>
-
 <div id="err">
   <div style="font-size:3rem;margin-bottom:1rem">😕</div>
   <div id="err-title">Something went wrong</div>
@@ -127,120 +105,117 @@ const db = firebase.database();
 const params  = new URLSearchParams(window.location.search);
 const orderId = params.get('order');
 let videoEl   = null;
+let animFrame = null;
+let isPlaying = false;
 let isMuted   = true;
 
-function setTxt(t) { document.getElementById('load-txt').textContent = t; }
-function showErr(title, msg) {
-  document.getElementById('loading').style.display = 'none';
+// Canvas for object-fit:cover rendering
+const canvas  = document.getElementById('cover-canvas');
+const ctx     = canvas.getContext('2d');
+
+function setTxt(t){document.getElementById('load-txt').textContent=t}
+function showErr(title,msg){
+  document.getElementById('loading').style.display='none';
   document.getElementById('err').classList.add('show');
-  document.getElementById('err-title').textContent = title;
-  document.getElementById('err-msg').textContent   = msg;
+  document.getElementById('err-title').textContent=title;
+  document.getElementById('err-msg').textContent=msg;
 }
 
-// ── INIT ────────────────────────────────────────────────────
-async function init() {
-  if (!orderId) { showErr('Invalid Link', 'No order ID found. Please use the QR code from SnapAndWrap.'); return; }
+// Draw video frame with object-fit:cover onto canvas
+function drawCoverFrame(){
+  if(!videoEl||!isPlaying) return;
+  const vw=videoEl.videoWidth, vh=videoEl.videoHeight;
+  const cw=canvas.width,       ch=canvas.height;
+  if(!vw||!vh) return;
 
+  // object-fit: cover calculation
+  const scale = Math.max(cw/vw, ch/vh);
+  const drawW = vw * scale;
+  const drawH = vh * scale;
+  const dx    = (cw - drawW) / 2;
+  const dy    = (ch - drawH) / 2;
+
+  ctx.clearRect(0, 0, cw, ch);
+  ctx.drawImage(videoEl, dx, dy, drawW, drawH);
+
+  // Update A-Frame texture from canvas
+  const plane = document.getElementById('video-plane');
+  if(plane && plane.components && plane.components.material){
+    const mat = plane.components.material.material;
+    if(mat && mat.map){
+      mat.map.needsUpdate = true;
+    }
+  }
+  animFrame = requestAnimationFrame(drawCoverFrame);
+}
+
+function b64ToBlob(b64,mime){
+  const raw=b64.includes(',')?b64.split(',')[1]:b64;
+  const bin=atob(raw);
+  const buf=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+  return new Blob([buf],{type:mime});
+}
+
+async function init(){
+  if(!orderId){showErr('Invalid Link','No order ID found. Use the QR code from SnapAndWrap.');return}
   setTxt('Finding your order...');
-  try {
-    const snap = await db.ref('orders/' + orderId).get();
-    if (!snap.exists()) { showErr('Order Not Found', 'Order "' + orderId + '" not found. Contact SnapAndWrap.'); return; }
-
-    const data = snap.val();
-    db.ref('orders/' + orderId + '/scanCount').transaction(c => (c || 0) + 1);
-
-    if (!data.mindFileData) { showErr('AR Not Ready', 'AR tracker missing. Contact SnapAndWrap.'); return; }
-    if (!data.videoURL)     { showErr('Video Missing', 'Video not found. Contact SnapAndWrap.'); return; }
-
+  try{
+    const snap=await db.ref('orders/'+orderId).get();
+    if(!snap.exists()){showErr('Order Not Found','Order "'+orderId+'" not found. Contact SnapAndWrap.');return}
+    const data=snap.val();
+    db.ref('orders/'+orderId+'/scanCount').transaction(c=>(c||0)+1);
+    if(!data.mindFileData){showErr('AR Not Ready','AR tracker missing. Contact SnapAndWrap.');return}
+    if(!data.videoURL){showErr('Video Missing','Video not found. Contact SnapAndWrap.');return}
     setTxt('Preparing AR...');
-
-    // Convert .mind base64 → blob URL
-    const mindBlob = b64ToBlob(data.mindFileData, 'application/octet-stream');
-    const mindURL  = URL.createObjectURL(mindBlob);
-
+    const mindBlob=b64ToBlob(data.mindFileData,'application/octet-stream');
+    const mindURL=URL.createObjectURL(mindBlob);
     setTxt('Starting camera...');
     buildScene(mindURL, data.videoURL);
-
-  } catch(e) {
-    showErr('Error', e.message);
-    console.error(e);
-  }
+  }catch(e){showErr('Error',e.message);console.error(e)}
 }
 
-// ── BASE64 → BLOB ────────────────────────────────────────────
-function b64ToBlob(b64, mime) {
-  const raw    = b64.includes(',') ? b64.split(',')[1] : b64;
-  const binary = atob(raw);
-  const bytes  = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mime });
-}
+function buildScene(mindURL, videoURL){
 
-// ── BUILD AR SCENE ───────────────────────────────────────────
-function buildScene(mindURL, videoURL) {
-
-  // We use a custom AFRAME component to implement object-fit:cover
-  // The trick: we use a large plane and clip it using the target's aspect ratio
-  AFRAME.registerComponent('video-cover', {
-    schema: {
-      src:    { type: 'string' },
-      width:  { type: 'number', default: 1 },
-      height: { type: 'number', default: 1 }
+  // Register canvas-texture component
+  // This uses the canvas (which draws cover-cropped video) as the plane texture
+  AFRAME.registerComponent('canvas-texture',{
+    init(){
+      // Create Three.js texture from canvas
+      const THREE = AFRAME.THREE;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.flipY = false; // A-Frame flips Y, we compensate
+      this.el.setAttribute('material',{
+        shader:'flat',
+        side:'double',
+        transparent:false
+      });
+      // Wait for material to be ready then assign canvas texture
+      this.el.addEventListener('materialtextureloaded',()=>{});
+      setTimeout(()=>{
+        const mat = this.el.components.material.material;
+        mat.map = texture;
+        mat.needsUpdate = true;
+        this.texture = texture;
+      }, 500);
     },
-    init() {
-      const vid = document.getElementById('snap-video');
-      if (!vid) return;
-
-      const applySize = () => {
-        const vw = vid.videoWidth;
-        const vh = vid.videoHeight;
-        if (!vw || !vh) return;
-
-        const targetW = this.data.width;
-        const targetH = this.data.height;
-
-        // object-fit: cover
-        // scale = max(targetW/vw, targetH/vh)
-        const scale  = Math.max(targetW / vw, targetH / vh);
-        const planeW = vw * scale;
-        const planeH = vh * scale;
-
-        // Set plane size to cover the full target
-        this.el.setAttribute('width',  planeW);
-        this.el.setAttribute('height', planeH);
-
-        // Clip using a-entity scale won't clip — we use a different approach:
-        // Set geometry to exact cover dimensions, UV stays default (centered)
-        // For true cropping we adjust UV — set via shader
-        this.el.setAttribute('material', {
-          shader: 'flat',
-          src: '#snap-video',
-          side: 'double',
-          // UV offset to center crop
-          repeat:  { x: targetW / planeW, y: targetH / planeH },
-          offset:  { x: (1 - targetW / planeW) / 2, y: (1 - targetH / planeH) / 2 }
-        });
-
-        // Reset plane to target size (UV handles the crop)
-        this.el.setAttribute('width',  targetW);
-        this.el.setAttribute('height', targetH);
-      };
-
-      vid.addEventListener('loadedmetadata', applySize);
-      if (vid.videoWidth) applySize(); // already loaded
+    tick(){
+      if(this.texture && isPlaying){
+        this.texture.needsUpdate = true;
+      }
     }
   });
 
-  const scene = document.createElement('a-scene');
-  scene.setAttribute('id', 'ar-scene');
+  const scene=document.createElement('a-scene');
+  scene.id='ar-scene';
   scene.setAttribute('mindar-image',
-    'imageTargetSrc: ' + mindURL + '; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;');
-  scene.setAttribute('color-space', 'sRGB');
-  scene.setAttribute('renderer', 'colorManagement: true; physicallyCorrectLights: true;');
-  scene.setAttribute('vr-mode-ui', 'enabled: false');
-  scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
+    'imageTargetSrc:'+mindURL+'; autoStart:true; uiLoading:no; uiError:no; uiScanning:no;');
+  scene.setAttribute('color-space','sRGB');
+  scene.setAttribute('renderer','colorManagement:true; physicallyCorrectLights:true;');
+  scene.setAttribute('vr-mode-ui','enabled:false');
+  scene.setAttribute('device-orientation-permission-ui','enabled:false');
 
-  scene.innerHTML = `
+  scene.innerHTML=`
     <a-assets>
       <video id="snap-video"
         src="${videoURL}"
@@ -259,61 +234,68 @@ function buildScene(mindURL, videoURL) {
       <a-plane
         id="video-plane"
         position="0 0 0.001"
-        video-cover="src: #snap-video; width: 1; height: 1"
+        width="1"
+        height="1"
+        canvas-texture
       ></a-plane>
     </a-entity>
   `;
 
   document.body.appendChild(scene);
 
-  // ── SCENE EVENTS ──────────────────────────────────────────
-  scene.addEventListener('arReady', () => {
+  scene.addEventListener('arReady',()=>{
     document.getElementById('loading').classList.add('hide');
-    setTimeout(() => {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('brand-corner').style.display = 'block';
-      document.getElementById('hint').style.display = 'block';
-    }, 500);
+    setTimeout(()=>{
+      document.getElementById('loading').style.display='none';
+      document.getElementById('brand-corner').style.display='block';
+      document.getElementById('hint').style.display='block';
+    },500);
   });
 
-  scene.addEventListener('loaded', () => {
-    videoEl = document.getElementById('snap-video');
-  });
-
-  // Target found → play video
-  scene.addEventListener('targetFound', () => {
-    document.getElementById('hint').style.opacity = '0';
-    const b = document.getElementById('banner');
-    b.style.display = 'block';
-    setTimeout(() => b.style.display = 'none', 2500);
-
-    videoEl = videoEl || document.getElementById('snap-video');
-    if (videoEl) {
-      videoEl.muted = true; // start muted (browser autoplay policy)
-      videoEl.play()
-        .then(() => {
-          // Show unmute button so user can tap for sound
-          document.getElementById('unmute-btn').style.display = 'block';
-        })
-        .catch(e => console.log('Play error:', e));
+  scene.addEventListener('loaded',()=>{
+    videoEl=document.getElementById('snap-video');
+    // Set canvas size to match video when ready
+    if(videoEl){
+      videoEl.addEventListener('loadedmetadata',()=>{
+        // Use square canvas — target image is square-ish
+        // Use power-of-2 for better GPU performance
+        canvas.width=512;
+        canvas.height=512;
+      });
     }
   });
 
-  // Target lost → pause
-  scene.addEventListener('targetLost', () => {
-    document.getElementById('hint').style.opacity = '1';
-    document.getElementById('unmute-btn').style.display = 'none';
-    if (videoEl) videoEl.pause();
+  scene.addEventListener('targetFound',()=>{
+    document.getElementById('hint').style.opacity='0';
+    const b=document.getElementById('banner');
+    b.style.display='block';
+    setTimeout(()=>b.style.display='none',2500);
+
+    videoEl=videoEl||document.getElementById('snap-video');
+    if(videoEl){
+      videoEl.muted=true;
+      videoEl.play().then(()=>{
+        isPlaying=true;
+        drawCoverFrame();
+        document.getElementById('unmute-btn').style.display='block';
+      }).catch(e=>console.log('Play error:',e));
+    }
+  });
+
+  scene.addEventListener('targetLost',()=>{
+    document.getElementById('hint').style.opacity='1';
+    document.getElementById('unmute-btn').style.display='none';
+    isPlaying=false;
+    if(animFrame) cancelAnimationFrame(animFrame);
+    if(videoEl) videoEl.pause();
   });
 }
 
-// ── UNMUTE ───────────────────────────────────────────────────
-function unmuteVideo() {
-  if (!videoEl) return;
-  isMuted = !isMuted;
-  videoEl.muted = isMuted;
-  const btn = document.getElementById('unmute-btn');
-  btn.textContent = isMuted ? '🔊 Tap for Sound' : '🔇 Mute';
+function unmuteVideo(){
+  if(!videoEl) return;
+  isMuted=!isMuted;
+  videoEl.muted=isMuted;
+  document.getElementById('unmute-btn').textContent=isMuted?'🔊 Tap for Sound':'🔇 Mute';
 }
 
 init();
