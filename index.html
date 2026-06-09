@@ -2,303 +2,142 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta charset="UTF-8">
-  <title>SnapAndWrap Magic Frame</title>
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#000;overflow:hidden;font-family:'DM Sans',sans-serif}
-    a-scene{position:fixed!important;top:0;left:0;width:100%!important;height:100%!important}
-    /* Hidden canvas used as video texture source */
-    #cover-canvas{display:none}
-    #loading{
-      position:fixed;inset:0;z-index:9999;background:#07070f;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      text-align:center;padding:2rem;transition:opacity .5s
+    /* User Interaction Overlay to bypass Audio Block */
+    #start-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0f;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: sans-serif;
     }
-    #loading.hide{opacity:0;pointer-events:none}
-    .brand{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
-      background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
-    .tag{font-size:0.78rem;color:#6b6b82;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2rem}
-    .spin{width:44px;height:44px;border:3px solid #22223a;border-top-color:#7c5cfc;
-      border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 1rem}
-    @keyframes sp{to{transform:rotate(360deg)}}
-    #load-txt{font-size:0.85rem;color:#6b6b82}
-    #err{position:fixed;inset:0;z-index:9998;background:#07070f;
-      display:none;flex-direction:column;align-items:center;justify-content:center;
-      padding:2rem;text-align:center;color:#f0f0f8}
-    #err.show{display:flex}
-    #err-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:8px}
-    #err-msg{font-size:0.88rem;color:#6b6b82;line-height:1.7;max-width:300px}
-    #unmute-btn{
-      position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);
-      z-index:200;display:none;
-      padding:12px 28px;border-radius:30px;
-      background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-      border:none;color:#fff;font-family:'Syne',sans-serif;
-      font-size:0.9rem;font-weight:700;cursor:pointer;
-      box-shadow:0 4px 20px rgba(124,92,252,.5)
-    }
-    #brand-corner{
-      position:fixed;top:1rem;left:1rem;z-index:100;
-      font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
-      background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-      display:none;pointer-events:none
-    }
-    #hint{
-      position:fixed;bottom:0;left:0;right:0;z-index:100;
-      padding:2rem 1.5rem;text-align:center;
-      background:linear-gradient(transparent,rgba(0,0,0,.8));
-      display:none;pointer-events:none
-    }
-    .pulse{width:54px;height:54px;border:2px solid rgba(124,92,252,.7);
-      border-radius:50%;margin:0 auto 12px;animation:pulse 1.6s ease-out infinite}
-    @keyframes pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.7);opacity:0}}
-    .h1{font-size:0.9rem;color:rgba(255,255,255,.85);font-weight:500;margin-bottom:4px}
-    .h2{font-size:0.75rem;color:rgba(255,255,255,.45)}
-    #banner{
-      position:fixed;top:1rem;left:50%;transform:translateX(-50%);
-      background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-      padding:8px 22px;border-radius:30px;font-size:0.82rem;
-      font-weight:600;z-index:100;display:none;color:#fff;
-      white-space:nowrap;box-shadow:0 4px 24px rgba(124,92,252,.5)
+    .start-btn {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #7c5cfc, #fc5c7d);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(124,92,252,.3);
     }
   </style>
+
+  <script>
+    // 1. THE OBJECT-FIT: COVER COMPONENT
+    // This dynamically crops the video to perfectly fill the tracking image area
+    AFRAME.registerComponent('video-cover', {
+      schema: {
+        // Replace these with the actual width/height ratio of your target photo
+        // E.g., if your photo is 1080x1080, width:1, height:1
+        // If your photo is portrait 1080x1920, width:1, height:1.77
+        targetWidth: {type: 'number', default: 1}, 
+        targetHeight: {type: 'number', default: 1} 
+      },
+      init: function () {
+        this.videoEl = document.querySelector(this.el.getAttribute('src'));
+
+        const applyCover = () => {
+          if (!this.videoEl.videoWidth) return; // Wait until video metadata loads
+
+          const mesh = this.el.getObject3D('mesh');
+          if (!mesh || !mesh.material.map) return;
+
+          const tex = mesh.material.map;
+
+          const vW = this.videoEl.videoWidth;
+          const vH = this.videoEl.videoHeight;
+          const tW = this.data.targetWidth;
+          const tH = this.data.targetHeight;
+
+          const vRatio = vW / vH;
+          const tRatio = tW / tH;
+
+          // Crop texture properly without distorting
+          if (vRatio > tRatio) {
+             // Video is wider than target -> Crop sides
+             const scaleU = tRatio / vRatio;
+             tex.repeat.set(scaleU, 1);
+             tex.offset.set((1 - scaleU) / 2, 0);
+          } else {
+             // Video is taller than target -> Crop top/bottom
+             const scaleV = vRatio / tRatio;
+             tex.repeat.set(1, scaleV);
+             tex.offset.set(0, (1 - scaleV) / 2);
+          }
+        };
+
+        // Apply when video metadata is loaded, and again when target is found
+        this.videoEl.addEventListener('loadedmetadata', applyCover);
+        this.el.sceneEl.addEventListener('targetFound', applyCover);
+      }
+    });
+
+    // 2. TARGET PLAY/PAUSE LOGIC
+    AFRAME.registerComponent('ar-controller', {
+      init: function () {
+        const target = this.el;
+        const video = document.querySelector('#ar-video');
+
+        // Play video when photo is scanned
+        target.addEventListener('targetFound', () => {
+          video.play();
+        });
+
+        // Pause video when photo is lost
+        target.addEventListener('targetLost', () => {
+          video.pause();
+        });
+      }
+    });
+  </script>
 </head>
 <body>
 
-<!-- Hidden canvas — renders object-fit:cover video frames as texture -->
-<canvas id="cover-canvas" width="512" height="512"></canvas>
+  <div id="start-overlay">
+    <h2 style="margin-bottom: 20px;">Ready to Scan!</h2>
+    <button class="start-btn" id="start-btn">Tap to Start AR</button>
+  </div>
 
-<div id="loading">
-  <div class="brand">SnapAndWrap</div>
-  <div class="tag">Magic Video Frame</div>
-  <div class="spin"></div>
-  <div id="load-txt">Loading your magic frame...</div>
-</div>
-<div id="err">
-  <div style="font-size:3rem;margin-bottom:1rem">😕</div>
-  <div id="err-title">Something went wrong</div>
-  <div id="err-msg">Please try again.</div>
-</div>
-
-<div id="brand-corner">SnapAndWrap ✨</div>
-<div id="banner">✨ Frame detected!</div>
-<button id="unmute-btn" onclick="unmuteVideo()">🔊 Tap for Sound</button>
-<div id="hint">
-  <div class="pulse"></div>
-  <div class="h1">Point camera at your photo frame</div>
-  <div class="h2">Keep frame fully visible • Hold steady</div>
-</div>
-
-<script>
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-const params  = new URLSearchParams(window.location.search);
-const orderId = params.get('order');
-let videoEl   = null;
-let animFrame = null;
-let isPlaying = false;
-let isMuted   = true;
-
-// Canvas for object-fit:cover rendering
-const canvas  = document.getElementById('cover-canvas');
-const ctx     = canvas.getContext('2d');
-
-function setTxt(t){document.getElementById('load-txt').textContent=t}
-function showErr(title,msg){
-  document.getElementById('loading').style.display='none';
-  document.getElementById('err').classList.add('show');
-  document.getElementById('err-title').textContent=title;
-  document.getElementById('err-msg').textContent=msg;
-}
-
-// Draw video frame with object-fit:cover onto canvas
-function drawCoverFrame(){
-  if(!videoEl||!isPlaying) return;
-  const vw=videoEl.videoWidth, vh=videoEl.videoHeight;
-  const cw=canvas.width,       ch=canvas.height;
-  if(!vw||!vh) return;
-
-  // object-fit: cover calculation
-  const scale = Math.max(cw/vw, ch/vh);
-  const drawW = vw * scale;
-  const drawH = vh * scale;
-  const dx    = (cw - drawW) / 2;
-  const dy    = (ch - drawH) / 2;
-
-  ctx.clearRect(0, 0, cw, ch);
-  ctx.drawImage(videoEl, dx, dy, drawW, drawH);
-
-  // Update A-Frame texture from canvas
-  const plane = document.getElementById('video-plane');
-  if(plane && plane.components && plane.components.material){
-    const mat = plane.components.material.material;
-    if(mat && mat.map){
-      mat.map.needsUpdate = true;
-    }
-  }
-  animFrame = requestAnimationFrame(drawCoverFrame);
-}
-
-function b64ToBlob(b64,mime){
-  const raw=b64.includes(',')?b64.split(',')[1]:b64;
-  const bin=atob(raw);
-  const buf=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
-  return new Blob([buf],{type:mime});
-}
-
-async function init(){
-  if(!orderId){showErr('Invalid Link','No order ID found. Use the QR code from SnapAndWrap.');return}
-  setTxt('Finding your order...');
-  try{
-    const snap=await db.ref('orders/'+orderId).get();
-    if(!snap.exists()){showErr('Order Not Found','Order "'+orderId+'" not found. Contact SnapAndWrap.');return}
-    const data=snap.val();
-    db.ref('orders/'+orderId+'/scanCount').transaction(c=>(c||0)+1);
-    if(!data.mindFileData){showErr('AR Not Ready','AR tracker missing. Contact SnapAndWrap.');return}
-    if(!data.videoURL){showErr('Video Missing','Video not found. Contact SnapAndWrap.');return}
-    setTxt('Preparing AR...');
-    const mindBlob=b64ToBlob(data.mindFileData,'application/octet-stream');
-    const mindURL=URL.createObjectURL(mindBlob);
-    setTxt('Starting camera...');
-    buildScene(mindURL, data.videoURL);
-  }catch(e){showErr('Error',e.message);console.error(e)}
-}
-
-function buildScene(mindURL, videoURL){
-
-  // Register canvas-texture component
-  // This uses the canvas (which draws cover-cropped video) as the plane texture
-  AFRAME.registerComponent('canvas-texture',{
-    init(){
-      // Create Three.js texture from canvas
-      const THREE = AFRAME.THREE;
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.flipY = false; // A-Frame flips Y, we compensate
-      this.el.setAttribute('material',{
-        shader:'flat',
-        side:'double',
-        transparent:false
-      });
-      // Wait for material to be ready then assign canvas texture
-      this.el.addEventListener('materialtextureloaded',()=>{});
-      setTimeout(()=>{
-        const mat = this.el.components.material.material;
-        mat.map = texture;
-        mat.needsUpdate = true;
-        this.texture = texture;
-      }, 500);
-    },
-    tick(){
-      if(this.texture && isPlaying){
-        this.texture.needsUpdate = true;
-      }
-    }
-  });
-
-  const scene=document.createElement('a-scene');
-  scene.id='ar-scene';
-  scene.setAttribute('mindar-image',
-    'imageTargetSrc:'+mindURL+'; autoStart:true; uiLoading:no; uiError:no; uiScanning:no;');
-  scene.setAttribute('color-space','sRGB');
-  scene.setAttribute('renderer','colorManagement:true; physicallyCorrectLights:true;');
-  scene.setAttribute('vr-mode-ui','enabled:false');
-  scene.setAttribute('device-orientation-permission-ui','enabled:false');
-
-  scene.innerHTML=`
+  <a-scene mindar-image="imageTargetSrc: YOUR_MIND_FILE.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    
     <a-assets>
-      <video id="snap-video"
-        src="${videoURL}"
-        preload="auto"
-        loop="true"
-        playsinline
-        webkit-playsinline
-        muted="true"
-        crossorigin="anonymous"
-      ></video>
+      <video id="ar-video" src="YOUR_VIDEO_URL.mp4" preload="auto" loop crossorigin="anonymous" playsinline></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0">
-      <a-plane
-        id="video-plane"
-        position="0 0 0.001"
-        width="1"
-        height="1"
-        canvas-texture
-      ></a-plane>
+    <a-entity mindar-image-target="targetIndex: 0" ar-controller>
+      
+      <a-plane src="#ar-video" position="0 0 0" width="1" height="1" video-cover="targetWidth: 1; targetHeight: 1" material="transparent: true"></a-plane>
+      
     </a-entity>
-  `;
 
-  document.body.appendChild(scene);
+  </a-scene>
 
-  scene.addEventListener('arReady',()=>{
-    document.getElementById('loading').classList.add('hide');
-    setTimeout(()=>{
-      document.getElementById('loading').style.display='none';
-      document.getElementById('brand-corner').style.display='block';
-      document.getElementById('hint').style.display='block';
-    },500);
-  });
-
-  scene.addEventListener('loaded',()=>{
-    videoEl=document.getElementById('snap-video');
-    // Set canvas size to match video when ready
-    if(videoEl){
-      videoEl.addEventListener('loadedmetadata',()=>{
-        // Use square canvas — target image is square-ish
-        // Use power-of-2 for better GPU performance
-        canvas.width=512;
-        canvas.height=512;
-      });
-    }
-  });
-
-  scene.addEventListener('targetFound',()=>{
-    document.getElementById('hint').style.opacity='0';
-    const b=document.getElementById('banner');
-    b.style.display='block';
-    setTimeout(()=>b.style.display='none',2500);
-
-    videoEl=videoEl||document.getElementById('snap-video');
-    if(videoEl){
-      videoEl.muted=true;
-      videoEl.play().then(()=>{
-        isPlaying=true;
-        drawCoverFrame();
-        document.getElementById('unmute-btn').style.display='block';
-      }).catch(e=>console.log('Play error:',e));
-    }
-  });
-
-  scene.addEventListener('targetLost',()=>{
-    document.getElementById('hint').style.opacity='1';
-    document.getElementById('unmute-btn').style.display='none';
-    isPlaying=false;
-    if(animFrame) cancelAnimationFrame(animFrame);
-    if(videoEl) videoEl.pause();
-  });
-}
-
-function unmuteVideo(){
-  if(!videoEl) return;
-  isMuted=!isMuted;
-  videoEl.muted=isMuted;
-  document.getElementById('unmute-btn').textContent=isMuted?'🔊 Tap for Sound':'🔇 Mute';
-}
-
-init();
-</script>
+  <script>
+    // 3. UNLOCK AUDIO ON TAP
+    document.getElementById('start-btn').addEventListener('click', function() {
+      const video = document.getElementById('ar-video');
+      
+      // Unmute and force a quick play/pause to satisfy the browser's media engine
+      video.muted = false; 
+      video.play().then(() => {
+        video.pause(); // Pause immediately until the tracker is actually found
+      }).catch((e) => console.log("Playback error: ", e));
+      
+      // Hide the overlay and let MindAR take over
+      document.getElementById('start-overlay').style.display = 'none';
+    });
+  </script>
 </body>
 </html>
