@@ -37,28 +37,33 @@ header{padding:1.2rem 2rem;border-bottom:1px solid var(--border);
 .card-title::before{content:'';width:4px;height:18px;
   background:linear-gradient(var(--accent),var(--accent2));border-radius:2px}
 
-/* HOW TO BANNER */
+/* HOW TO GUIDE */
 .how-to{background:var(--surface2);border:1px solid var(--border);
   border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.5rem}
-.how-to-title{font-size:0.82rem;font-weight:600;color:var(--accent);margin-bottom:8px;
-  display:flex;align-items:center;gap:6px}
-.steps-row{display:flex;gap:0;flex-wrap:wrap}
-.how-step{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);padding:4px 0}
-.how-step-num{width:20px;height:20px;border-radius:50%;background:var(--accent);
-  color:#fff;font-size:0.68rem;font-weight:700;
-  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-.how-arrow{color:var(--border);margin:0 6px;font-size:0.9rem}
-.mindar-link{color:var(--accent);text-decoration:none;font-weight:600}
-.mindar-link:hover{text-decoration:underline}
+.how-to-title{font-size:0.82rem;font-weight:600;color:var(--accent);margin-bottom:10px}
+.how-steps{display:flex;flex-direction:column;gap:8px}
+.how-step{display:flex;align-items:flex-start;gap:10px;font-size:0.8rem;color:var(--muted);line-height:1.5}
+.step-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-size:0.68rem;font-weight:700;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
+.how-link{color:var(--accent);text-decoration:none;font-weight:600}
+.how-link:hover{text-decoration:underline}
+
+/* Drive instruction box */
+.drive-guide{background:#0d1f0d;border:1px solid #1a3a1a;border-radius:10px;
+  padding:10px 14px;margin-bottom:1rem;font-size:0.78rem;color:#86efac;line-height:1.7}
+.drive-guide b{color:#4ade80}
 
 label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:5px;
   text-transform:uppercase;letter-spacing:.04em}
-input[type=text],input[type=tel]{
+input[type=text],input[type=tel],input[type=url]{
   width:100%;padding:10px 14px;background:var(--surface2);
   border:1px solid var(--border);border-radius:10px;color:var(--text);
   font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;
   transition:border-color .2s;margin-bottom:1rem}
 input:focus{border-color:var(--accent)}
+input.valid{border-color:var(--success)}
+input.invalid{border-color:#f87171}
 
 .upload-box{border:2px dashed var(--border);border-radius:12px;padding:1.2rem;
   text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1rem;
@@ -75,7 +80,7 @@ input:focus{border-color:var(--accent)}
 .progress-label{font-size:0.75rem;color:var(--muted);margin-bottom:6px}
 .progress-bg{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
-  width:0%;transition:width .3s;border-radius:3px}
+  width:0%;transition:width .4s;border-radius:3px}
 
 .btn{width:100%;padding:13px;border:none;border-radius:12px;
   font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all .2s}
@@ -134,13 +139,11 @@ input:focus{border-color:var(--accent)}
 
   <!-- HOW TO GUIDE -->
   <div class="how-to">
-    <div class="how-to-title">📋 How to add each order (3 steps)</div>
-    <div class="steps-row">
-      <div class="how-step"><span class="how-step-num">1</span> Go to <a class="mindar-link" href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">MindAR Compiler ↗</a> → upload frame photo → download .mind file</div>
-      <span class="how-arrow">→</span>
-      <div class="how-step"><span class="how-step-num">2</span> Fill form below: customer name, phone, upload .mind file + video</div>
-      <span class="how-arrow">→</span>
-      <div class="how-step"><span class="how-step-num">3</span> Click Add Order → get QR → send to customer on WhatsApp</div>
+    <div class="how-to-title">📋 How to add each new order</div>
+    <div class="how-steps">
+      <div class="how-step"><span class="step-num">1</span>Go to <a class="how-link" href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">MindAR Compiler ↗</a> → upload frame photo → download .mind file</div>
+      <div class="how-step"><span class="step-num">2</span>Upload customer video to <a class="how-link" href="https://drive.google.com/drive/folders/1nT_6lcuM01mxDVzkQtlDNBP0PB_OfiB-" target="_blank">SnapAndWrap Google Drive ↗</a> → right click file → Share → Anyone with link → copy link</div>
+      <div class="how-step"><span class="step-num">3</span>Fill the form below → paste Google Drive link → click Add Order → send QR to customer on WhatsApp</div>
     </div>
   </div>
 
@@ -157,7 +160,7 @@ input:focus{border-color:var(--accent)}
       <label>Order ID</label>
       <input type="text" id="order-id" readonly style="color:var(--muted)">
 
-      <label>Frame Photo (for preview only)</label>
+      <label>Frame Photo (for customer preview)</label>
       <div class="upload-box" id="frame-box">
         <input type="file" id="frame-file" accept="image/*" onchange="handleFile(this,'frame')">
         <div class="upload-icon">🖼️</div>
@@ -171,18 +174,20 @@ input:focus{border-color:var(--accent)}
         <input type="file" id="mind-file" accept=".mind" onchange="handleFile(this,'mind')">
         <div class="upload-icon">🧠</div>
         <div class="upload-label">Upload .mind file</div>
-        <div class="upload-sub">Get this from MindAR compiler website</div>
+        <div class="upload-sub">Download from MindAR compiler above</div>
         <div class="upload-name" id="mind-name"></div>
       </div>
 
-      <label>Customer Video (MP4, under 25MB)</label>
-      <div class="upload-box" id="video-box">
-        <input type="file" id="video-file" accept="video/*" onchange="handleFile(this,'video')">
-        <div class="upload-icon">🎬</div>
-        <div class="upload-label">Upload video (MP4 recommended)</div>
-        <div class="upload-sub">This plays when frame is detected</div>
-        <div class="upload-name" id="video-name"></div>
+      <label>Google Drive Video Link</label>
+      <div class="drive-guide">
+        <b>How to get the link:</b><br>
+        1. Upload video to Google Drive folder<br>
+        2. Right click the video → <b>Share</b><br>
+        3. Change to <b>"Anyone with the link"</b><br>
+        4. Click <b>Copy link</b> → paste below
       </div>
+      <input type="url" id="video-url" placeholder="https://drive.google.com/file/d/..." oninput="validateDriveLink(this)">
+      <div id="drive-link-status" style="font-size:0.75rem;margin-top:-10px;margin-bottom:12px;display:none"></div>
 
       <div class="progress-wrap" id="progress-wrap">
         <div class="progress-label" id="progress-label">Uploading...</div>
@@ -220,7 +225,7 @@ input:focus{border-color:var(--accent)}
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let files = { frame: null, mind: null, video: null };
+let files = { frame: null, mind: null };
 let currentLink = '';
 
 function genOrderId(){
@@ -242,30 +247,59 @@ function handleFile(input, type){
   document.getElementById(type+'-box').classList.add('has-file');
 }
 
+// Convert Google Drive share link to direct stream link
+function convertDriveLink(url){
+  // Format 1: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+  // Format 2: https://drive.google.com/open?id=FILE_ID
+  let fileId = null;
+  const match1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if(match1) fileId = match1[1];
+  else if(match2) fileId = match2[1];
+  if(!fileId) return null;
+  // Direct stream URL — works for video playback
+  return 'https://drive.google.com/uc?export=download&id=' + fileId;
+}
+
+function validateDriveLink(input){
+  const val = input.value.trim();
+  const statusEl = document.getElementById('drive-link-status');
+  if(!val){ statusEl.style.display='none'; input.className=''; return; }
+  const converted = convertDriveLink(val);
+  if(converted){
+    input.classList.add('valid'); input.classList.remove('invalid');
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#22c55e';
+    statusEl.textContent = '✓ Valid Google Drive link detected';
+  } else {
+    input.classList.add('invalid'); input.classList.remove('valid');
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#f87171';
+    statusEl.textContent = '✗ Invalid link. Make sure you copy the sharing link from Google Drive';
+  }
+}
+
 function showStatus(m,t){
   const e = document.getElementById('status-msg');
-  e.textContent = m; e.className = 'status '+t; e.style.display = 'block';
+  e.textContent=m; e.className='status '+t; e.style.display='block';
 }
-
-function setProgress(pct, label){
-  document.getElementById('progress-wrap').style.display = 'block';
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-label').textContent = label;
+function setProgress(pct,label){
+  document.getElementById('progress-wrap').style.display='block';
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('progress-label').textContent=label;
 }
-
 function toBase64(file){
   return new Promise((res,rej)=>{
-    const r = new FileReader();
-    r.onload = () => res(r.result);
-    r.onerror = () => rej(new Error('Read failed'));
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=()=>rej(new Error('Read failed'));
     r.readAsDataURL(file);
   });
 }
-
 async function uploadToImgBB(file){
-  const fd = new FormData(); fd.append('image', file);
-  const r = await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_API_KEY,{method:'POST',body:fd});
-  const d = await r.json();
+  const fd=new FormData(); fd.append('image',file);
+  const r=await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_API_KEY,{method:'POST',body:fd});
+  const d=await r.json();
   if(!d.success) throw new Error('ImgBB upload failed');
   return d.data.url;
 }
@@ -274,35 +308,30 @@ async function submitOrder(){
   const name = document.getElementById('cust-name').value.trim();
   const phone = document.getElementById('cust-phone').value.trim();
   const orderId = document.getElementById('order-id').value.trim();
+  const videoURL = document.getElementById('video-url').value.trim();
 
   if(!name){ showStatus('Please enter customer name','error'); return; }
   if(!phone){ showStatus('Please enter phone number','error'); return; }
   if(!files.frame){ showStatus('Please upload frame photo','error'); return; }
-  if(!files.mind){ showStatus('Please upload .mind file (from MindAR compiler)','error'); return; }
-  if(!files.video){ showStatus('Please upload customer video','error'); return; }
-  if(files.video.size > 26214400){ showStatus('Video too large! Please use a video under 25MB.','error'); return; }
+  if(!files.mind){ showStatus('Please upload .mind file','error'); return; }
+  if(!videoURL){ showStatus('Please paste Google Drive video link','error'); return; }
+
+  const directVideoURL = convertDriveLink(videoURL);
+  if(!directVideoURL){ showStatus('Invalid Google Drive link. Please copy the correct sharing link.','error'); return; }
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
 
   try {
-    // Step 1: Upload frame preview to ImgBB
-    setProgress(15, 'Uploading frame preview...');
+    setProgress(15, 'Uploading frame preview to ImgBB...');
     showStatus('Uploading frame image...','loading');
     const frameURL = await uploadToImgBB(files.frame);
 
-    // Step 2: Read .mind file as base64
-    setProgress(35, 'Reading .mind file...');
+    setProgress(45, 'Reading .mind file...');
     showStatus('Processing .mind file...','loading');
     const mindFileData = await toBase64(files.mind);
 
-    // Step 3: Read video as base64
-    setProgress(60, 'Processing video...');
-    showStatus('Processing video...','loading');
-    const videoData = await toBase64(files.video);
-
-    // Step 4: Save to Firebase
-    setProgress(85, 'Saving to database...');
+    setProgress(80, 'Saving order to database...');
     showStatus('Saving order...','loading');
     await db.ref('orders/' + orderId).set({
       customerName: name,
@@ -310,93 +339,92 @@ async function submitOrder(){
       orderId: orderId,
       frameURL: frameURL,
       mindFileData: mindFileData,
-      videoData: videoData,
+      videoURL: directVideoURL,        // Google Drive direct stream link
+      videoShareURL: videoURL,         // Original share link (for reference)
       scanCount: 0,
       orderDate: new Date().toISOString(),
       status: 'active'
     });
 
-    setProgress(100, 'Done!');
-    showStatus('✅ Order added successfully! AR is ready.','success');
+    setProgress(100, '✅ Done!');
+    showStatus('✅ Order added! AR is ready.','success');
 
     const arLink = window.location.origin +
       window.location.pathname.replace('admin.html','') +
       'index.html?order=' + orderId;
     showQR(name, orderId, arLink);
 
-    // Reset form
-    document.getElementById('cust-name').value = '';
-    document.getElementById('cust-phone').value = '';
-    ['frame','mind','video'].forEach(t=>{
-      document.getElementById(t+'-name').textContent = '';
-      document.getElementById(t+'-file').value = '';
+    // Reset
+    document.getElementById('cust-name').value='';
+    document.getElementById('cust-phone').value='';
+    document.getElementById('video-url').value='';
+    document.getElementById('drive-link-status').style.display='none';
+    ['frame','mind'].forEach(t=>{
+      document.getElementById(t+'-name').textContent='';
+      document.getElementById(t+'-file').value='';
       document.getElementById(t+'-box').classList.remove('has-file');
-      files[t] = null;
+      files[t]=null;
     });
-    document.getElementById('order-id').value = genOrderId();
-    setTimeout(()=>{ document.getElementById('progress-wrap').style.display='none'; }, 2000);
+    document.getElementById('order-id').value=genOrderId();
+    setTimeout(()=>{ document.getElementById('progress-wrap').style.display='none'; },2000);
 
   } catch(e){
-    showStatus('Error: ' + e.message, 'error');
+    showStatus('Error: '+e.message,'error');
     console.error(e);
-    document.getElementById('progress-wrap').style.display = 'none';
+    document.getElementById('progress-wrap').style.display='none';
   }
-  btn.disabled = false;
+  btn.disabled=false;
 }
 
-function showQR(name, oid, link){
-  currentLink = link;
-  document.getElementById('modal-name').textContent = name;
-  document.getElementById('modal-oid').textContent = oid;
-  document.getElementById('modal-link').textContent = link;
-  document.getElementById('qr-canvas').innerHTML = '';
+function showQR(name,oid,link){
+  currentLink=link;
+  document.getElementById('modal-name').textContent=name;
+  document.getElementById('modal-oid').textContent=oid;
+  document.getElementById('modal-link').textContent=link;
+  document.getElementById('qr-canvas').innerHTML='';
   new QRCode(document.getElementById('qr-canvas'),{
-    text:link, width:200, height:200,
-    colorDark:'#000', colorLight:'#fff',
+    text:link,width:200,height:200,colorDark:'#000',colorLight:'#fff',
     correctLevel:QRCode.CorrectLevel.H
   });
   document.getElementById('qr-modal').classList.add('open');
 }
-
 function copyLink(){
   navigator.clipboard.writeText(currentLink);
-  document.getElementById('modal-link').textContent = '✓ Copied!';
-  setTimeout(()=>{ document.getElementById('modal-link').textContent = currentLink; }, 2000);
+  document.getElementById('modal-link').textContent='✓ Copied!';
+  setTimeout(()=>{ document.getElementById('modal-link').textContent=currentLink; },2000);
 }
 
 function loadOrders(){
-  db.ref('orders').on('value', snap=>{
-    const data = snap.val();
-    const c = document.getElementById('orders-container');
+  db.ref('orders').on('value',snap=>{
+    const data=snap.val();
+    const c=document.getElementById('orders-container');
     if(!data){
-      c.innerHTML = '<div class="empty">No orders yet.</div>';
-      document.getElementById('total-orders').textContent = '0';
-      document.getElementById('total-scans').textContent = '0';
-      return;
+      c.innerHTML='<div class="empty">No orders yet.</div>';
+      document.getElementById('total-orders').textContent='0';
+      document.getElementById('total-scans').textContent='0'; return;
     }
-    const orders = Object.values(data).reverse();
-    document.getElementById('total-orders').textContent = orders.length;
-    document.getElementById('total-scans').textContent = orders.reduce((s,o)=>s+(o.scanCount||0),0);
-    const base = window.location.origin +
-      window.location.pathname.replace('admin.html','') + 'index.html';
-    let html = '<table class="orders-table"><thead><tr><th>Customer</th><th>Order</th><th>Scans</th><th>AR</th><th>Actions</th></tr></thead><tbody>';
+    const orders=Object.values(data).reverse();
+    document.getElementById('total-orders').textContent=orders.length;
+    document.getElementById('total-scans').textContent=orders.reduce((s,o)=>s+(o.scanCount||0),0);
+    const base=window.location.origin+window.location.pathname.replace('admin.html','')+'index.html';
+    let html='<table class="orders-table"><thead><tr><th>Customer</th><th>Order</th><th>Scans</th><th>Video</th><th>Actions</th></tr></thead><tbody>';
     orders.forEach(o=>{
-      const link = base + '?order=' + o.orderId;
-      const arReady = o.mindFileData ? '✅ Ready' : '❌ No .mind';
-      html += `<tr>
+      const link=base+'?order='+o.orderId;
+      const vidOk = o.videoURL ? '✅' : '❌';
+      html+=`<tr>
         <td><div style="font-weight:500">${o.customerName}</div>
             <div style="font-size:0.72rem;color:var(--muted)">${o.phone}</div></td>
         <td style="font-size:0.75rem;color:var(--muted);font-family:monospace">${o.orderId}</td>
         <td>👁 ${o.scanCount||0}</td>
-        <td style="font-size:0.78rem">${arReady}</td>
+        <td>${vidOk} Drive</td>
         <td>
           <button class="qr-btn" onclick="showQR('${o.customerName}','${o.orderId}','${link}')">QR</button>
           <button class="del-btn" onclick="if(confirm('Delete order ${o.orderId}?'))db.ref('orders/${o.orderId}').remove()">Del</button>
         </td>
       </tr>`;
     });
-    html += '</tbody></table>';
-    c.innerHTML = html;
+    html+='</tbody></table>';
+    c.innerHTML=html;
   });
 }
 loadOrders();
