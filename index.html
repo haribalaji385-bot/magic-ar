@@ -223,10 +223,11 @@ function buildARScene(mindURL, videoURL, customerName) {
         <a-video
           id="ar-video-plane"
           src="#ar-video"
-          position="0 0 0"
+          position="0 0 0.001"
           rotation="0 0 0"
           width="1"
-          height="0.5625"
+          height="1"
+          material="shader: flat; src: #ar-video; side: double;"
         ></a-video>
       </a-entity>
     </a-scene>
@@ -250,6 +251,31 @@ function buildARScene(mindURL, videoURL, customerName) {
     document.getElementById('corner-brand').style.display = 'block';
     document.getElementById('scan-hint').style.display = 'block';
   });
+
+
+  // Auto-adjust video dimensions to match video aspect ratio
+  const vidEl = document.getElementById("ar-video");
+  if (vidEl) {
+    vidEl.addEventListener("loadedmetadata", () => {
+      const vw = vidEl.videoWidth;
+      const vh = vidEl.videoHeight;
+      if (!vw || !vh) return;
+      const plane = document.getElementById("ar-video-plane");
+      if (plane) {
+        if (vh > vw) {
+          // Vertical video: fix height to 1, calc width
+          const w = vh > 0 ? (vw / vh) : 0.5625;
+          plane.setAttribute("width", w.toFixed(4));
+          plane.setAttribute("height", "1");
+        } else {
+          // Landscape video: fix width to 1, calc height
+          const h = vw > 0 ? (vh / vw) : 0.5625;
+          plane.setAttribute("width", "1");
+          plane.setAttribute("height", h.toFixed(4));
+        }
+      }
+    });
+  }
 
   // Target found — play video
   scene.addEventListener('targetFound', () => {
