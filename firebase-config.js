@@ -10,4 +10,5 @@ const firebaseConfig = {
 };
 
 const IMGBB_API_KEY = "363d3131d614d399008a3c446c79919a";
-const GDRIVE_FOLDER_ID = "1nT_6lcuM01mxDVzkQtlDNBP0PB_OfiB-";
+const CLOUDINARY_CLOUD = "dwljsxzte";
+const CLOUDINARY_PRESET = "snapandwrap_videos";
