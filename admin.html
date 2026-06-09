@@ -55,9 +55,9 @@ input[type=text],input[type=tel]{
 input:focus{border-color:var(--accent)}
 .upload-box{border:2px dashed var(--border);border-radius:12px;padding:1.2rem;
   text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1rem;
-  background:var(--surface2);position:relative;overflow:hidden}
+  background:var(--surface2)}
 .upload-box:hover{border-color:var(--accent);background:#1a1a28}
-.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-box input{display:none}
 .upload-icon{font-size:1.8rem;margin-bottom:6px}
 .upload-label{font-size:0.82rem;color:var(--muted)}
 .upload-sub{font-size:0.72rem;color:var(--muted);margin-top:3px;opacity:.7}
@@ -144,31 +144,31 @@ input:focus{border-color:var(--accent)}
       <input type="text" id="order-id" readonly style="color:var(--muted)">
 
       <label>Frame Photo (for customer preview)</label>
-      <div class="upload-box" id="frame-box">
+      <label for="frame-file" class="upload-box" id="frame-box">
         <input type="file" id="frame-file" accept="image/*" onchange="handleFile(this,'frame')">
         <div class="upload-icon">🖼️</div>
-        <div class="upload-label">Upload frame photo (JPG/PNG)</div>
+        <div class="upload-label">Click to upload frame photo (JPG/PNG)</div>
         <div class="upload-sub">Shown to customer as preview</div>
         <div class="upload-name" id="frame-name"></div>
-      </div>
+      </label>
 
       <label>.mind File (from MindAR compiler)</label>
-      <div class="upload-box" id="mind-box">
+      <label for="mind-file" class="upload-box" id="mind-box">
         <input type="file" id="mind-file" accept=".mind" onchange="handleFile(this,'mind')">
         <div class="upload-icon">🧠</div>
-        <div class="upload-label">Upload .mind file</div>
+        <div class="upload-label">Click to upload .mind file</div>
         <div class="upload-sub">Download from MindAR compiler above</div>
         <div class="upload-name" id="mind-name"></div>
-      </div>
+      </label>
 
       <label>Customer Video (MP4, any size)</label>
-      <div class="upload-box" id="video-box">
+      <label for="video-file" class="upload-box" id="video-box">
         <input type="file" id="video-file" accept="video/mp4,video/webm,video/*" onchange="handleFile(this,'video')">
         <div class="upload-icon">🎬</div>
-        <div class="upload-label">Upload video (MP4 recommended)</div>
+        <div class="upload-label">Click to upload video (MP4 recommended)</div>
         <div class="upload-sub">Uploaded to Cloudinary — free, fast, no size limit</div>
         <div class="upload-name" id="video-name"></div>
-      </div>
+      </label>
 
       <div class="progress-wrap" id="progress-wrap">
         <div class="progress-label" id="progress-label">Uploading...</div>
