@@ -1,100 +1,125 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SnapAndWrap Magic Frame</title>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;overflow:hidden;font-family:'DM Sans',sans-serif}
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>SnapAndWrap Magic Frame</title>
 
-#splash{
-  position:fixed;inset:0;background:#07070f;z-index:1000;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:2rem;transition:opacity .5s
-}
-#splash.hide{opacity:0;pointer-events:none}
-.brand{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
-  background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
-.tagline{font-size:0.78rem;color:#6b6b82;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2rem}
-.loader{width:42px;height:42px;border:3px solid #22223a;border-top-color:#7c5cfc;
-  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-.load-text{font-size:0.85rem;color:#6b6b82}
+  <!-- CORRECT ORDER: A-Frame first, then MindAR aframe build -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-#error-screen{
-  position:fixed;inset:0;background:#07070f;z-index:999;
-  display:none;flex-direction:column;align-items:center;justify-content:center;
-  padding:2rem;text-align:center;color:#f0f0f8
-}
-.err-icon{font-size:3rem;margin-bottom:1rem}
-.err-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:8px}
-.err-msg{font-size:0.88rem;color:#6b6b82;line-height:1.7;max-width:300px}
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
 
-/* MindAR container */
-#mindar-container{position:fixed;inset:0;z-index:1}
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 
-/* Hint overlay */
-#scan-hint{
-  position:fixed;bottom:0;left:0;right:0;z-index:50;
-  padding:2rem 1.5rem;text-align:center;
-  background:linear-gradient(transparent,rgba(0,0,0,.75));
-  pointer-events:none
-}
-.hint-pulse{
-  width:56px;height:56px;border:2px solid rgba(124,92,252,.7);
-  border-radius:50%;margin:0 auto 12px;
-  animation:pulse 1.6s ease-out infinite
-}
-@keyframes pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.6);opacity:0}}
-.hint-text{font-size:0.9rem;color:rgba(255,255,255,.8);font-weight:500;margin-bottom:4px}
-.hint-sub{font-size:0.75rem;color:rgba(255,255,255,.45)}
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; font-family: 'DM Sans', sans-serif; overflow: hidden; }
 
-#corner-brand{
-  position:fixed;top:1rem;left:1rem;z-index:50;
-  font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;
-  background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  pointer-events:none
-}
+    /* Fullscreen A-Frame scene */
+    a-scene {
+      position: fixed !important;
+      top: 0; left: 0;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 1;
+    }
 
-#detected-banner{
-  position:fixed;top:1rem;left:50%;transform:translateX(-50%);
-  background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
-  padding:7px 20px;border-radius:30px;font-size:0.82rem;font-weight:600;
-  z-index:55;display:none;white-space:nowrap;color:#fff;
-  box-shadow:0 4px 20px rgba(124,92,252,.5)
-}
-</style>
+    /* Loading overlay */
+    #loading-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #07070f;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 2rem;
+    }
+    .brand {
+      font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
+      background: linear-gradient(135deg, #7c5cfc, #fc5c7d);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .tagline { font-size: 0.8rem; color: #6b6b82; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2rem; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid #22223a; border-top-color: #7c5cfc;
+      border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #load-msg { font-size: 0.85rem; color: #6b6b82; }
+
+    /* Error screen */
+    #error-overlay {
+      position: fixed; inset: 0; z-index: 9998;
+      background: #07070f; display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      padding: 2rem; text-align: center; color: #f0f0f8;
+    }
+    #error-overlay.show { display: flex; }
+    .err-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .err-title { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    .err-msg { font-size: 0.88rem; color: #6b6b82; line-height: 1.7; max-width: 300px; }
+
+    /* UI overlays on top of AR */
+    #corner-brand {
+      position: fixed; top: 1rem; left: 1rem; z-index: 100;
+      font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700;
+      background: linear-gradient(135deg, #7c5cfc, #fc5c7d);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      display: none; pointer-events: none;
+    }
+    #scan-hint {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      padding: 2rem 1.5rem; text-align: center;
+      background: linear-gradient(transparent, rgba(0,0,0,.8));
+      display: none; pointer-events: none;
+    }
+    .pulse-ring {
+      width: 54px; height: 54px;
+      border: 2px solid rgba(124,92,252,.7); border-radius: 50%;
+      margin: 0 auto 12px; animation: pulse 1.6s ease-out infinite;
+    }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.7); opacity: 0; } }
+    .hint-text { font-size: 0.9rem; color: rgba(255,255,255,.85); font-weight: 500; margin-bottom: 4px; }
+    .hint-sub { font-size: 0.75rem; color: rgba(255,255,255,.45); }
+
+    #detected-banner {
+      position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #7c5cfc, #fc5c7d);
+      padding: 8px 22px; border-radius: 30px; font-size: 0.82rem; font-weight: 600;
+      z-index: 100; display: none; white-space: nowrap; color: #fff;
+      box-shadow: 0 4px 24px rgba(124,92,252,.5);
+    }
+  </style>
 </head>
 <body>
 
-<div id="splash">
+<!-- Loading -->
+<div id="loading-overlay">
   <div class="brand">SnapAndWrap</div>
   <div class="tagline">Magic Video Frame</div>
-  <div class="loader"></div>
-  <div class="load-text" id="load-text">Loading your magic...</div>
+  <div class="spinner"></div>
+  <div id="load-msg">Loading your magic frame...</div>
 </div>
 
-<div id="error-screen">
+<!-- Error -->
+<div id="error-overlay">
   <div class="err-icon">😕</div>
   <div class="err-title" id="err-title">Something went wrong</div>
   <div class="err-msg" id="err-msg">Please try again.</div>
 </div>
 
-<div id="mindar-container"></div>
-<div id="corner-brand" style="display:none">SnapAndWrap</div>
-<div id="detected-banner">✨ Magic Frame detected!</div>
-<div id="scan-hint" style="display:none">
-  <div class="hint-pulse"></div>
+<!-- UI overlays (shown after loading) -->
+<div id="corner-brand">SnapAndWrap ✨</div>
+<div id="detected-banner">✨ Frame detected!</div>
+<div id="scan-hint">
+  <div class="pulse-ring"></div>
   <div class="hint-text">Point camera at your photo frame</div>
-  <div class="hint-sub">Keep the frame fully in view • Hold steady</div>
+  <div class="hint-sub">Keep frame fully visible • Hold steady</div>
 </div>
 
 <script>
@@ -103,133 +128,149 @@ const db = firebase.database();
 
 const params = new URLSearchParams(window.location.search);
 const orderId = params.get('order');
-let mindARInstance = null;
 
-function setLoad(t){ document.getElementById('load-text').textContent = t; }
-function showError(title, msg){
-  document.getElementById('splash').style.display = 'none';
-  const e = document.getElementById('error-screen');
-  e.style.display = 'flex';
+function setMsg(t) { document.getElementById('load-msg').textContent = t; }
+function showError(title, msg) {
+  document.getElementById('loading-overlay').style.display = 'none';
+  const e = document.getElementById('error-overlay');
+  e.classList.add('show');
   document.getElementById('err-title').textContent = title;
   document.getElementById('err-msg').textContent = msg;
 }
 
-async function init(){
-  if(!orderId){
-    showError('Invalid Link','No order ID found. Please use the QR code from SnapAndWrap.');
+async function init() {
+  if (!orderId) {
+    showError('Invalid Link', 'No order ID found. Please use the QR code sent by SnapAndWrap.');
     return;
   }
-  setLoad('Finding your order...');
+
+  setMsg('Finding your order...');
   try {
     const snap = await db.ref('orders/' + orderId).get();
-    if(!snap.exists()){
-      showError('Order Not Found','Order "'+orderId+'" not found. Contact SnapAndWrap on WhatsApp.');
+    if (!snap.exists()) {
+      showError('Order Not Found', 'Order "' + orderId + '" not found. Please contact SnapAndWrap.');
       return;
     }
     const data = snap.val();
-    db.ref('orders/'+orderId+'/scanCount').transaction(c=>(c||0)+1);
 
-    if(!data.mindFileData){
-      showError('AR Not Ready','The .mind tracking file for this order is not set up yet. Please contact SnapAndWrap.');
+    if (!data.mindFileData) {
+      showError('AR Not Ready', 'The AR tracker for this order is not set up yet. Please contact SnapAndWrap.');
+      return;
+    }
+    if (!data.videoData) {
+      showError('Video Missing', 'No video found for this order. Please contact SnapAndWrap.');
       return;
     }
 
-    setLoad('Loading AR tracker...');
-    await startMindAR(data.mindFileData, data.videoData);
+    // Count scan
+    db.ref('orders/' + orderId + '/scanCount').transaction(c => (c || 0) + 1);
 
-  } catch(e){
-    showError('Error', e.message);
+    setMsg('Preparing AR experience...');
+
+    // Convert base64 .mind → blob URL
+    const mindBlob = b64toBlob(data.mindFileData, 'application/octet-stream');
+    const mindURL = URL.createObjectURL(mindBlob);
+
+    // Convert base64 video → blob URL
+    const vidBlob = b64toBlob(data.videoData, 'video/mp4');
+    const vidURL = URL.createObjectURL(vidBlob);
+
+    setMsg('Starting camera...');
+    buildARScene(mindURL, vidURL, data.customerName);
+
+  } catch(e) {
+    showError('Connection Error', 'Could not load order data. Check internet and try again.\n' + e.message);
     console.error(e);
   }
 }
 
-async function startMindAR(mindFileBase64, videoBase64){
-  setLoad('Starting camera...');
+function b64toBlob(base64, mime) {
+  // Handle both "data:...;base64,XXX" and raw base64
+  const b64 = base64.includes(',') ? base64.split(',')[1] : base64;
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
 
-  // Convert base64 .mind file to blob URL
-  const mindBlob = base64ToBlob(mindFileBase64, 'application/octet-stream');
-  const mindURL = URL.createObjectURL(mindBlob);
-
-  // Convert video base64 to blob URL
-  const videoBlob = base64ToBlob(videoBase64, 'video/mp4');
-  const videoURL = URL.createObjectURL(videoBlob);
-
-  // Build MindAR scene dynamically
-  const container = document.getElementById('mindar-container');
-  container.innerHTML = `
+function buildARScene(mindURL, videoURL, customerName) {
+  // Inject A-Frame scene into body
+  const sceneHTML = `
     <a-scene
       id="ar-scene"
       mindar-image="imageTargetSrc: ${mindURL}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;"
       color-space="sRGB"
-      renderer="colorManagement: true, physicallyCorrectLights"
+      renderer="colorManagement: true; physicallyCorrectLights: true;"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
-      style="position:fixed;inset:0;z-index:1"
     >
       <a-assets>
-        <video id="ar-video" src="${videoURL}" preload="auto" loop crossorigin playsinline webkit-playsinline muted></video>
+        <video
+          id="ar-video"
+          src="${videoURL}"
+          preload="auto"
+          loop="true"
+          crossorigin="anonymous"
+          playsinline
+          webkit-playsinline
+          muted="false"
+        ></video>
       </a-assets>
-      <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-plane
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="ar-target" mindar-image-target="targetIndex: 0">
+        <a-video
+          id="ar-video-plane"
           src="#ar-video"
           position="0 0 0"
-          height="0.552"
-          width="1"
           rotation="0 0 0"
-          material="shader: flat; src: #ar-video"
-        ></a-plane>
+          width="1"
+          height="0.5625"
+        ></a-video>
       </a-entity>
     </a-scene>
   `;
 
-  // Load A-Frame after setting up scene
-  const aframeScript = document.createElement('script');
-  aframeScript.src = 'https://aframe.io/releases/1.4.0/aframe.min.js';
-  document.head.appendChild(aframeScript);
+  document.body.insertAdjacentHTML('beforeend', sceneHTML);
 
-  aframeScript.onload = () => {
-    const mindScript = document.createElement('script');
-    mindScript.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js';
-    document.head.appendChild(mindScript);
+  const scene = document.getElementById('ar-scene');
 
-    mindScript.onload = () => {
-      setLoad('Almost ready...');
-      setTimeout(() => {
-        document.getElementById('splash').classList.add('hide');
-        setTimeout(() => {
-          document.getElementById('splash').style.display = 'none';
-          document.getElementById('scan-hint').style.display = 'block';
-          document.getElementById('corner-brand').style.display = 'block';
-        }, 500);
+  scene.addEventListener('loaded', () => {
+    setMsg('AR Ready! Point at your frame...');
+    setTimeout(() => {
+      document.getElementById('loading-overlay').style.display = 'none';
+      document.getElementById('corner-brand').style.display = 'block';
+      document.getElementById('scan-hint').style.display = 'block';
+    }, 800);
+  });
 
-        // Watch for target found/lost
-        const scene = document.getElementById('ar-scene');
-        scene.addEventListener('targetFound', () => {
-          document.getElementById('scan-hint').style.opacity = '0';
-          const banner = document.getElementById('detected-banner');
-          banner.style.display = 'block';
-          setTimeout(() => { banner.style.display = 'none'; }, 2000);
-          const vid = document.getElementById('ar-video');
-          if(vid){ vid.muted = false; vid.play(); }
-        });
-        scene.addEventListener('targetLost', () => {
-          document.getElementById('scan-hint').style.opacity = '1';
-          const vid = document.getElementById('ar-video');
-          if(vid) vid.pause();
-        });
-      }, 1000);
-    };
-  };
-}
+  scene.addEventListener('arReady', () => {
+    document.getElementById('loading-overlay').style.display = 'none';
+    document.getElementById('corner-brand').style.display = 'block';
+    document.getElementById('scan-hint').style.display = 'block';
+  });
 
-function base64ToBlob(base64, mimeType){
-  const parts = base64.split(';base64,');
-  const raw = parts.length > 1 ? parts[1] : parts[0];
-  const binary = atob(raw);
-  const bytes = new Uint8Array(binary.length);
-  for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], {type: mimeType});
+  // Target found — play video
+  scene.addEventListener('targetFound', () => {
+    document.getElementById('scan-hint').style.opacity = '0';
+    const banner = document.getElementById('detected-banner');
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 2500);
+
+    const vid = document.getElementById('ar-video');
+    if (vid) {
+      vid.muted = false;
+      vid.play().catch(() => { vid.muted = true; vid.play(); });
+    }
+  });
+
+  // Target lost — pause video
+  scene.addEventListener('targetLost', () => {
+    document.getElementById('scan-hint').style.opacity = '1';
+    const vid = document.getElementById('ar-video');
+    if (vid) vid.pause();
+  });
 }
 
 init();
