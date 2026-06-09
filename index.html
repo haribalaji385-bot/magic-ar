@@ -157,7 +157,7 @@ async function init() {
       showError('AR Not Ready', 'The AR tracker for this order is not set up yet. Please contact SnapAndWrap.');
       return;
     }
-    if (!data.videoData) {
+    if (!data.videoURL) {
       showError('Video Missing', 'No video found for this order. Please contact SnapAndWrap.');
       return;
     }
@@ -171,9 +171,12 @@ async function init() {
     const mindBlob = b64toBlob(data.mindFileData, 'application/octet-stream');
     const mindURL = URL.createObjectURL(mindBlob);
 
-    // Convert base64 video → blob URL
-    const vidBlob = b64toBlob(data.videoData, 'video/mp4');
-    const vidURL = URL.createObjectURL(vidBlob);
+    // Use Google Drive direct stream URL
+    const vidURL = data.videoURL;
+    if (!vidURL) {
+      showError('Video Missing', 'No video found for this order. Please contact SnapAndWrap.');
+      return;
+    }
 
     setMsg('Starting camera...');
     buildARScene(mindURL, vidURL, data.customerName);
