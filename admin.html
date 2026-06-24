@@ -92,9 +92,53 @@ header{padding:1.2rem 2rem;border-bottom:1px solid #2a2a38;display:flex;align-it
 .howto-step::before{content:counter(step);counter-increment:step;position:absolute;left:0;color:#7c5cfc;font-weight:700}
 .howto{counter-reset:step}
 a.hlink{color:#7c5cfc;text-decoration:none;font-weight:600}
+
+/* LOGIN SCREEN */
+#login-screen{
+  position:fixed;inset:0;z-index:99999;background:#07070f;
+  display:flex;align-items:center;justify-content:center;padding:1.5rem;
+}
+#login-screen.hide{display:none}
+.lbox{
+  background:#13131a;border:1px solid #2a2a38;border-radius:20px;
+  padding:2.5rem 2rem;width:100%;max-width:360px;text-align:center;
+}
+.lbox .brand{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;
+  background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.lbox .ltag{font-size:0.72rem;color:#6b6b82;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2rem}
+.linp{
+  width:100%;padding:11px 14px;background:#1c1c26;border:1px solid #2a2a38;
+  border-radius:10px;color:#f0f0f8;font-size:0.9rem;outline:none;
+  margin-bottom:1rem;font-family:'DM Sans',sans-serif;text-align:left;
+}
+.linp:focus{border-color:#7c5cfc}
+.lbtn{
+  width:100%;padding:13px;border:none;border-radius:12px;
+  font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;
+  cursor:pointer;background:linear-gradient(135deg,#7c5cfc,#fc5c7d);
+  color:#fff;box-shadow:0 4px 20px rgba(124,92,252,.3);margin-top:4px;
+}
+.lerr{
+  margin-top:10px;padding:9px 14px;border-radius:10px;
+  background:#2d0a0a;color:#f87171;border:1px solid #7f1d1d;
+  font-size:0.82rem;display:none;
+}
 </style>
 </head>
 <body>
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="lbox">
+    <div class="brand">SnapAndWrap</div>
+    <div class="ltag">Admin Access</div>
+    <input class="linp" type="text" id="l-user" placeholder="Username" autocomplete="username">
+    <input class="linp" type="password" id="l-pass" placeholder="Password" autocomplete="current-password">
+    <button class="lbtn" onclick="doLogin()">🔐 Login</button>
+    <div class="lerr" id="l-err">Incorrect username or password.</div>
+  </div>
+</div>
+
 <header>
   <div class="logo">SnapAndWrap <small>Admin Dashboard</small></div>
   <div class="stats">
@@ -179,6 +223,37 @@ a.hlink{color:#7c5cfc;text-decoration:none;font-weight:600}
 </div>
 
 <script>
+// ── LOGIN GUARD ──────────────────────────────────────────────
+const ADMIN_USER = 'snapandwrap';
+const ADMIN_PASS = 'magic@2024';
+
+function doLogin() {
+  const u = document.getElementById('l-user').value.trim();
+  const p = document.getElementById('l-pass').value;
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    sessionStorage.setItem('snw_auth', '1');
+    document.getElementById('login-screen').classList.add('hide');
+  } else {
+    const err = document.getElementById('l-err');
+    err.style.display = 'block';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+// Allow Enter key to submit login
+document.addEventListener('DOMContentLoaded', () => {
+  ['l-user','l-pass'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  });
+  // Auto-hide login if already authenticated this session
+  if (sessionStorage.getItem('snw_auth') === '1') {
+    document.getElementById('login-screen').classList.add('hide');
+  }
+});
+// ─────────────────────────────────────────────────────────────
+
 const CLOUD  = 'dwljsxzte';
 const PRESET = 'snapandwrap_videos';
 
