@@ -224,34 +224,28 @@ a.hlink{color:#7c5cfc;text-decoration:none;font-weight:600}
 
 <script>
 // ── LOGIN GUARD ──────────────────────────────────────────────
-const ADMIN_USER = 'snapandwrap';
-const ADMIN_PASS = 'magic@2024';
-
 function doLogin() {
-  const u = document.getElementById('l-user').value.trim();
-  const p = document.getElementById('l-pass').value;
-  if (u === ADMIN_USER && p === ADMIN_PASS) {
-    sessionStorage.setItem('snw_auth', '1');
-    document.getElementById('login-screen').classList.add('hide');
+  var u = document.getElementById('l-user').value;
+  var p = document.getElementById('l-pass').value;
+  var validUser = (u === 'snapandwrap');
+  var validPass = (p === 'magic@2024');
+  if (validUser && validPass) {
+    sessionStorage.setItem('snw_auth', 'yes');
+    document.getElementById('login-screen').style.display = 'none';
   } else {
-    const err = document.getElementById('l-err');
-    err.style.display = 'block';
-    setTimeout(() => err.style.display = 'none', 3000);
+    document.getElementById('l-err').style.display = 'block';
+    setTimeout(function(){ document.getElementById('l-err').style.display = 'none'; }, 3000);
   }
 }
 
-// Allow Enter key to submit login
-document.addEventListener('DOMContentLoaded', () => {
-  ['l-user','l-pass'].forEach(id => {
-    document.getElementById(id).addEventListener('keydown', e => {
-      if (e.key === 'Enter') doLogin();
-    });
-  });
-  // Auto-hide login if already authenticated this session
-  if (sessionStorage.getItem('snw_auth') === '1') {
-    document.getElementById('login-screen').classList.add('hide');
-  }
-});
+// Enter key support
+document.getElementById('l-user').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('l-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+
+// Already logged in this session?
+if (sessionStorage.getItem('snw_auth') === 'yes') {
+  document.getElementById('login-screen').style.display = 'none';
+}
 // ─────────────────────────────────────────────────────────────
 
 const CLOUD  = 'dwljsxzte';
