@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -35,6 +36,12 @@ header{padding:1.2rem 2rem;border-bottom:1px solid #2a2a38;display:flex;align-it
 .ficon{font-size:1.3rem;flex-shrink:0}
 .fname{flex:1;font-size:0.82rem;color:#6b6b82;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fname.ok{color:#22c55e}
+.mindstatus{display:flex;align-items:center;gap:6px;font-size:0.76rem;color:#6b6b82;margin-top:6px;padding-left:2px}
+.mindstatus.working{color:#7c5cfc}
+.mindstatus.working span:first-child{display:inline-block;animation:spinTxt 1s linear infinite}
+.mindstatus.ok{color:#22c55e}
+.mindstatus.err{color:#f87171}
+@keyframes spinTxt{to{transform:rotate(360deg)}}
 /* The actual file input - visible, styled as a button */
 .finput{
   padding:5px 12px;border-radius:8px;border:1px solid #7c5cfc;
@@ -150,8 +157,8 @@ a.hlink{color:#7c5cfc;text-decoration:none;font-weight:600}
 <div class="wrap">
   <div class="howto">
     <div class="howto-title">📋 How to add each order</div>
-    <div class="howto-step">Go to <a class="hlink" href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">MindAR Compiler ↗</a> → upload frame photo → download .mind file</div>
-    <div class="howto-step">Fill form below → select frame photo + .mind file + video → click Add Order</div>
+    <div class="howto-step">Fill form below → select frame photo (AR tracker auto-generates) + video → click Add Order</div>
+    <div class="howto-step">Wait for the green "AR tracker ready" check before submitting</div>
     <div class="howto-step">QR generated → screenshot → send to customer via WhatsApp</div>
   </div>
 
@@ -175,14 +182,9 @@ a.hlink{color:#7c5cfc;text-decoration:none;font-weight:600}
           <span class="fname" id="frame-lbl">No file chosen</span>
           <input class="finput" type="file" id="frame-file" accept="image/*" onchange="onFile(this,'frame')">
         </div>
-      </div>
-
-      <div class="fgroup">
-        <span class="lbl">.mind File (AR Tracker)</span>
-        <div class="frow" id="mind-row">
-          <span class="ficon">🧠</span>
-          <span class="fname" id="mind-lbl">No file chosen</span>
-          <input class="finput" type="file" id="mind-file" accept=".mind,application/octet-stream" onchange="onFile(this,'mind')">
+        <div class="mindstatus" id="mind-status" style="display:none">
+          <span id="mind-status-icon">🧠</span>
+          <span id="mind-status-txt">Generating AR tracker...</span>
         </div>
       </div>
 
@@ -256,6 +258,7 @@ const db = firebase.database();
 
 const picked = {frame:null, mind:null, video:null};
 let qrLink = '';
+let mindBusy = false; // true while compiling, blocks submit
 
 // Order ID
 function genId(){
@@ -269,6 +272,16 @@ function genId(){
 }
 document.getElementById('f-oid').value = genId();
 
+function setMindStatus(state, text){
+  const box = document.getElementById('mind-status');
+  const icon = document.getElementById('mind-status-icon');
+  const txt = document.getElementById('mind-status-txt');
+  box.style.display = 'flex';
+  box.className = 'mindstatus ' + state;
+  icon.textContent = state === 'working' ? '⏳' : state === 'ok' ? '✅' : state === 'err' ? '⚠️' : '🧠';
+  txt.textContent = text;
+}
+
 // File selection handler
 function onFile(input, key){
   const f = input.files && input.files[0];
@@ -278,6 +291,48 @@ function onFile(input, key){
   document.getElementById(key+'-lbl').textContent = f.name + ' ('+size+')';
   document.getElementById(key+'-lbl').className = 'fname ok';
   document.getElementById(key+'-row').classList.add('done');
+
+  if(key === 'frame'){
+    picked.mind = null; // invalidate any previous compile
+    compileMindFile(f);
+  }
+}
+
+// Auto-compile the .mind AR tracker from the chosen frame photo
+async function compileMindFile(file){
+  mindBusy = true;
+  document.getElementById('sbtn').disabled = true;
+  setMindStatus('working', 'Generating AR tracker... this can take up to 30s');
+
+  try {
+    const dataUrl = await readFile(file); // reuse existing FileReader helper
+    const img = new Image();
+    await new Promise((ok, err) => {
+      img.onload = ok;
+      img.onerror = () => err(new Error('Could not read image'));
+      img.src = dataUrl;
+    });
+
+    const compiler = new window.MINDAR.Compiler();
+    await compiler.compileImageTargets([img], (progress) => {
+      setMindStatus('working', 'Generating AR tracker... ' + Math.round(progress) + '%');
+    });
+    const exportedBuffer = await compiler.exportData();
+    // exportedBuffer is an ArrayBuffer/Uint8Array - convert to base64 for Firebase storage
+    const bytes = exportedBuffer instanceof Uint8Array ? exportedBuffer : new Uint8Array(exportedBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    picked.mind = btoa(binary);
+
+    setMindStatus('ok', 'AR tracker ready ✓');
+  } catch(e) {
+    console.error('Mind compile error:', e);
+    picked.mind = null;
+    setMindStatus('err', 'Failed to generate AR tracker: ' + e.message + ' — try a clearer/different photo');
+  }
+
+  mindBusy = false;
+  document.getElementById('sbtn').disabled = false;
 }
 
 function msg(t,c){const e=document.getElementById('smsg');e.textContent=t;e.className='smsg '+c;e.style.display='block';}
@@ -328,7 +383,8 @@ async function submitOrder(){
   if(!name)         {msg('Enter customer name','err');return;}
   if(!phone)        {msg('Enter phone number','err');return;}
   if(!picked.frame) {msg('Select frame photo','err');return;}
-  if(!picked.mind)  {msg('Select .mind file','err');return;}
+  if(mindBusy)      {msg('AR tracker still generating, please wait...','err');return;}
+  if(!picked.mind)  {msg('AR tracker not ready — reselect the frame photo to retry','err');return;}
   if(!picked.video) {msg('Select video file','err');return;}
 
   document.getElementById('sbtn').disabled=true;
@@ -336,8 +392,9 @@ async function submitOrder(){
     prog(5,'Uploading frame...');msg('Uploading frame...','ld');
     const frameURL = await imgbb(picked.frame);
 
-    prog(20,'Reading .mind file...');msg('Reading .mind file...','ld');
-    const mindData = await readFile(picked.mind);
+    // picked.mind is already a base64 string (auto-generated when frame was selected)
+    prog(25,'Preparing AR tracker...');msg('Preparing AR tracker...','ld');
+    const mindData = picked.mind;
 
     prog(30,'Uploading video...');msg('Uploading video...','ld');
     const videoURL = await cloudinary(picked.video);
@@ -360,13 +417,15 @@ async function submitOrder(){
     document.getElementById('f-name').value='';
     document.getElementById('f-phone').value='';
     document.getElementById('f-oid').value=genId();
-    ['frame','mind','video'].forEach(k=>{
+    ['frame','video'].forEach(k=>{
       picked[k]=null;
       document.getElementById(k+'-file').value='';
       document.getElementById(k+'-lbl').textContent='No file chosen';
       document.getElementById(k+'-lbl').className='fname';
       document.getElementById(k+'-row').classList.remove('done');
     });
+    picked.mind = null;
+    document.getElementById('mind-status').style.display='none';
     setTimeout(()=>document.getElementById('pbar').style.display='none',2000);
   }catch(e){
     msg('Error: '+e.message,'err');
