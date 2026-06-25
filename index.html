@@ -77,30 +77,33 @@
     // Component to mimic object-fit: cover on A-Frame texture
     AFRAME.registerComponent('video-cover', {
       init: function() {
+        this._applyUV = this._applyUV.bind(this);
         this.el.addEventListener('materialtextureloaded', e => {
-          const tex = e.detail.texture;
-          const vid = e.detail.src;
-          const updateUV = () => {
-            // Get AR Plane Dimensions
-            const planeW = parseFloat(this.el.getAttribute('width')) || 1;
-            const planeH = parseFloat(this.el.getAttribute('height')) || 1;
-            const planeAspect = planeW / planeH;
-            const videoAspect = vid.videoWidth / vid.videoHeight;
-
-            // Crop texture proportionally without distortion
-            if (videoAspect > planeAspect) {
-              const repeatX = planeAspect / videoAspect;
-              tex.repeat.set(repeatX, 1);
-              tex.offset.set((1 - repeatX) / 2, 0);
-            } else {
-              const repeatY = videoAspect / planeAspect;
-              tex.repeat.set(1, repeatY);
-              tex.offset.set(0, (1 - repeatY) / 2);
-            }
-          };
-          if (vid.videoWidth > 0) updateUV();
-          else vid.addEventListener('loadedmetadata', updateUV);
+          this._tex = e.detail.texture;
+          this._vid = e.detail.src;
+          if (this._vid.videoWidth > 0) {
+            this._applyUV();
+          } else {
+            this._vid.addEventListener('loadedmetadata', this._applyUV);
+          }
         });
+      },
+      _applyUV: function() {
+        if (!this._tex || !this._vid) return;
+        const planeW = parseFloat(this.el.getAttribute('width')) || 1;
+        const planeH = parseFloat(this.el.getAttribute('height')) || 1;
+        const planeAspect = planeW / planeH;
+        const videoAspect = this._vid.videoWidth / this._vid.videoHeight;
+        if (videoAspect > planeAspect) {
+          const rx = planeAspect / videoAspect;
+          this._tex.repeat.set(rx, 1);
+          this._tex.offset.set((1 - rx) / 2, 0);
+        } else {
+          const ry = videoAspect / planeAspect;
+          this._tex.repeat.set(1, ry);
+          this._tex.offset.set(0, (1 - ry) / 2);
+        }
+        this._tex.needsUpdate = true;
       }
     });
   </script>
@@ -217,40 +220,38 @@ function showStartScreen() {
   document.getElementById('start-screen').style.display = 'flex';
 }
 
-// THE AUDIO UNLOCK TRICK
+// THE AUDIO UNLOCK TRICK — use a silent AudioContext unlock instead of playing globalVideo
 document.getElementById('start-btn').addEventListener('click', () => {
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('loading').style.display = 'flex';
   setTxt('Starting camera...');
 
-  // Unmute and briefly play to unlock audio context on iOS/Android
-  globalVideo.muted = false;
-  globalVideo.volume = 1.0;
+  // Unlock audio context on iOS/Android with a silent buffer
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+      const ctx = new AudioContext();
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+      ctx.resume().then(() => ctx.close());
+    }
+  } catch(e) { /* ignore */ }
 
-  const playPromise = globalVideo.play();
-  if(playPromise !== undefined){
-    playPromise.then(() => {
-      globalVideo.pause();
-      globalVideo.currentTime = 0;
-      buildScene();
-    }).catch(() => {
-      // Fallback: build scene anyway, video plays muted if needed
-      globalVideo.muted = true;
-      buildScene();
-    });
-  } else {
-    buildScene();
-  }
+  buildScene();
 });
 
 function buildScene() {
-  // Add video to DOM first so a-assets can find it
+  // Style globalVideo so it's hidden but in DOM (A-Frame needs it as a texture source)
   globalVideo.id = 'snap-video';
+  globalVideo.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
   document.body.appendChild(globalVideo);
 
   const scene = document.createElement('a-scene');
   scene.id = 'ar-scene';
-  scene.setAttribute('mindar-image', 'imageTargetSrc:' + mindURLStr + '; autoStart:true; uiLoading:no; uiError:no; uiScanning:no;');
+  scene.setAttribute('mindar-image', 'imageTargetSrc:' + mindURLStr + '; autoStart:true; uiLoading:no; uiError:no; uiScanning:no; filterMinCF:0.001; filterBeta:1000; missTolerance:5; warmupTolerance:3;');
   scene.setAttribute('color-space', 'sRGB');
   scene.setAttribute('renderer', 'colorManagement:true; physicallyCorrectLights:true;');
   scene.setAttribute('vr-mode-ui', 'enabled:false');
@@ -264,6 +265,7 @@ function buildScene() {
         playsinline
         webkit-playsinline
         preload="auto"
+        crossorigin="anonymous"
       ></video>
     </a-assets>
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -290,15 +292,20 @@ function buildScene() {
     }, 500);
   });
 
+  scene.addEventListener('arError', (e) => {
+    showErr('Camera Error', 'Could not access camera. Please allow camera permission and reload.');
+    console.error('AR error:', e);
+  });
+
   scene.addEventListener('targetFound', () => {
     document.getElementById('hint').style.opacity = '0';
     const b = document.getElementById('banner');
     b.style.display = 'block';
     setTimeout(() => b.style.display = 'none', 2500);
 
-    // Play the in-scene video (ar-vid) with sound
+    // Play only the in-scene <video id="ar-vid"> with sound
     const arVid = document.getElementById('ar-vid');
-    if(arVid){
+    if (arVid) {
       arVid.muted = false;
       arVid.volume = 1.0;
       arVid.currentTime = 0;
@@ -307,16 +314,12 @@ function buildScene() {
         arVid.play().catch(e => console.log('Play failed:', e));
       });
     }
-    // Also play globalVideo for audio unlock
-    globalVideo.muted = false;
-    globalVideo.play().catch(()=>{});
   });
 
   scene.addEventListener('targetLost', () => {
     document.getElementById('hint').style.opacity = '1';
     const arVid = document.getElementById('ar-vid');
-    if(arVid) arVid.pause();
-    globalVideo.pause();
+    if (arVid) arVid.pause();
   });
 }
 
