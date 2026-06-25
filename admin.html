@@ -8,7 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js" type="module"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -298,6 +298,22 @@ function onFile(input, key){
   }
 }
 
+// Wait for the MindAR ES module script to finish loading and attach window.MINDAR.IMAGE
+function waitForMindAR(timeoutMs = 8000){
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    (function check(){
+      if (window.MINDAR && window.MINDAR.IMAGE && window.MINDAR.IMAGE.Compiler) {
+        resolve();
+      } else if (Date.now() - start > timeoutMs) {
+        reject(new Error('AR library failed to load (check your internet connection)'));
+      } else {
+        setTimeout(check, 100);
+      }
+    })();
+  });
+}
+
 // Auto-compile the .mind AR tracker from the chosen frame photo
 async function compileMindFile(file){
   mindBusy = true;
@@ -305,6 +321,8 @@ async function compileMindFile(file){
   setMindStatus('working', 'Generating AR tracker... this can take up to 30s');
 
   try {
+    await waitForMindAR();
+
     const dataUrl = await readFile(file); // reuse existing FileReader helper
     const img = new Image();
     await new Promise((ok, err) => {
@@ -313,7 +331,7 @@ async function compileMindFile(file){
       img.src = dataUrl;
     });
 
-    const compiler = new window.MINDAR.Compiler();
+    const compiler = new window.MINDAR.IMAGE.Compiler();
     await compiler.compileImageTargets([img], (progress) => {
       setMindStatus('working', 'Generating AR tracker... ' + Math.round(progress) + '%');
     });
