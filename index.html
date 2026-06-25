@@ -147,8 +147,9 @@ const globalVideo = document.createElement('video');
 globalVideo.id = 'snap-video';
 globalVideo.setAttribute('playsinline', '');
 globalVideo.setAttribute('webkit-playsinline', '');
-globalVideo.setAttribute('crossorigin', 'anonymous');
+// DO NOT set crossorigin for Cloudinary — causes CORS block on mobile
 globalVideo.loop = true;
+globalVideo.muted = false;
 
 let targetPlaneHeight = 1; // Default to square if we can't fetch image dimensions
 let mindURLStr = "";
@@ -222,15 +223,24 @@ document.getElementById('start-btn').addEventListener('click', () => {
   document.getElementById('loading').style.display = 'flex';
   setTxt('Starting camera...');
 
-  // Unmute and briefly play to satisfy iOS/Android audio requirements natively
+  // Unmute and briefly play to unlock audio context on iOS/Android
   globalVideo.muted = false;
-  globalVideo.play().then(() => {
-    globalVideo.pause();
+  globalVideo.volume = 1.0;
+
+  const playPromise = globalVideo.play();
+  if(playPromise !== undefined){
+    playPromise.then(() => {
+      globalVideo.pause();
+      globalVideo.currentTime = 0;
+      buildScene();
+    }).catch(() => {
+      // Fallback: build scene anyway, video plays muted if needed
+      globalVideo.muted = true;
+      buildScene();
+    });
+  } else {
     buildScene();
-  }).catch(e => {
-    // If playback still fails (rare), proceed to build scene anyway
-    buildScene();
-  });
+  }
 });
 
 function buildScene() {
@@ -285,8 +295,15 @@ function buildScene() {
     b.style.display = 'block';
     setTimeout(() => b.style.display = 'none', 2500);
 
-    // Audio works flawlessly now because of the Start Screen unlock
-    globalVideo.play().catch(e => console.log('Play error:', e));
+    // Play with sound — already unlocked by start button
+    globalVideo.muted = false;
+    globalVideo.volume = 1.0;
+    globalVideo.currentTime = 0;
+    globalVideo.play().catch(e => {
+      // If still blocked, play muted
+      globalVideo.muted = true;
+      globalVideo.play().catch(e2 => console.log('Play failed:', e2));
+    });
   });
 
   scene.addEventListener('targetLost', () => {
