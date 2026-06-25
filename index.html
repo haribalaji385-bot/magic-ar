@@ -250,7 +250,7 @@ function buildScene() {
 
   const scene = document.createElement('a-scene');
   scene.id = 'ar-scene';
-  scene.setAttribute('mindar-image', 'imageTargetSrc:' + mindURLStr + '; autoStart:true; uiLoading:no; uiError:no; uiScanning:no; filterMinCF:0.00005; filterBeta:5000; warmupTolerance:5; missTolerance:8;');
+  scene.setAttribute('mindar-image', 'imageTargetSrc:' + mindURLStr + '; autoStart:true; uiLoading:no; uiError:no; uiScanning:no;');
   scene.setAttribute('color-space', 'sRGB');
   scene.setAttribute('renderer', 'colorManagement:true; physicallyCorrectLights:true;');
   scene.setAttribute('vr-mode-ui', 'enabled:false');
